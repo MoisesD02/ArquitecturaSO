@@ -1,0 +1,313 @@
+/* ==========================================================================
+   1. CONFIGURACIÓN GENERAL Y FUENTES
+   ========================================================================== */
+.root { 
+    -fx-font-family: "Segoe UI", Arial, sans-serif; 
+}
+
+.app-root {
+    -fx-background-color: #f4f7fb;
+}
+
+.content-area {
+    -fx-background-color: #f4f7fb;
+}
+
+/* ==========================================================================
+   2. BARRA SUPERIOR (HEADER / TOPBAR)
+   ========================================================================== */
+.topbar { 
+    -fx-background-color: white; 
+    -fx-border-color: transparent transparent #dbe3ef transparent; 
+}
+
+.app-title { 
+    -fx-font-size: 25px; 
+    -fx-font-weight: 800; 
+    -fx-text-fill: #0b1d3a; 
+}
+
+.app-subtitle, 
+.page-subtitle, 
+.muted { 
+    -fx-text-fill: #71809a; 
+}
+
+.top-label, 
+.sidebar-caption { 
+    -fx-font-size: 10px; 
+    -fx-font-weight: 700; 
+    -fx-text-fill: #7082a5; 
+}
+
+.clock { 
+    -fx-font-size: 17px; 
+    -fx-font-weight: 800; 
+    -fx-text-fill: #0b1d3a; 
+}
+
+.status-on { 
+    -fx-text-fill: #1f9d63; 
+    -fx-font-weight: 700; 
+}
+
+.status-off { 
+    -fx-text-fill: #d6475b; 
+    -fx-font-weight: 700; 
+}
+
+/* ==========================================================================
+   3. BARRA LATERAL (SIDEBAR & NAVEGACIÓN)
+   ========================================================================== */
+.sidebar { 
+    -fx-background-color: #182741; 
+}
+
+.sidebar .separator .line { 
+    -fx-border-color: #34435c; 
+}
+
+.nav-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #eaf0fb;
+    -fx-alignment: CENTER_LEFT;
+    -fx-font-weight: 600;
+    -fx-padding: 11 12;
+
+    /* Borde */
+    -fx-border-color: #34435c;
+    -fx-border-width: 1px;
+    -fx-border-style: solid;
+    -fx-border-radius: 8px;
+
+    /* Esquinas redondeadas */
+    -fx-background-radius: 8px;
+}
+
+.nav-button:hover {
+    -fx-background-color: #263a5c;
+    -fx-border-color: #4d6388;
+}
+
+.nav-active {
+    -fx-background-color: #3462f5;
+    -fx-text-fill: white;
+
+    /* Borde del botón activo */
+    -fx-border-color: #6f8fff;
+    -fx-border-width: 1px;
+    -fx-border-radius: 8px;
+}-text-fill: white;
+}
+
+/* Botones de control del Kernel (Iniciar, Detener, etc.) */
+.button-success, 
+.button-danger, 
+.button-primary, 
+.button-secondary { 
+    -fx-text-fill: white; 
+    -fx-font-weight: 700; 
+    -fx-background-radius: 8; 
+    -fx-padding: 10 12; 
+}
+
+.button-success { 
+    -fx-background-color: #25a46d; 
+}
+
+.button-danger { 
+    -fx-background-color: #ea5564; 
+}
+
+.button-primary { 
+    -fx-background-color: #3462f5; 
+}
+
+.button-secondary { 
+    -fx-background-color: #60728f; 
+}
+
+.button-success:hover { -fx-background-color: #1f8b5c; }
+.button-danger:hover  { -fx-background-color: #d44554; }
+.button-primary:hover { -fx-background-color: #2650d8; }
+.button-secondary:hover { -fx-background-color: #4f5f78; }
+
+/* ==========================================================================
+   4. TARJETAS (CARDS) Y COMPONENTES DEL DASHBOARD
+   ========================================================================== */
+.page-title {
+    -fx-font-size: 24px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #0b1d3a;
+}
+
+.card {
+    -fx-background-color: #ffffff;
+    -fx-padding: 16px;
+    -fx-background-radius: 10px;
+    -fx-border-radius: 10px;
+
+    /* Configuración explícita de bordes */
+    -fx-border-style: solid;
+    -fx-border-width: 2px;
+    -fx-border-color: #2c3e50;
+    -fx-border-insets: 0; /* Asegura que el borde no quede oculto */
+
+    -fx-effect: dropshadow(three-pass-box, rgba(11, 29, 58, 0.15), 8, 0, 0, 2);
+}
+
+.interactive-card:hover {
+    -fx-border-style: solid;
+    -fx-border-width: 2px;
+    -fx-border-color: #3462f5;
+    -fx-background-color: #f0f4ff;
+    -fx-effect: dropshadow(three-pass-box, rgba(52, 98, 245, 0.35), 10, 0, 0, 4);
+}
+
+.wide-card {
+    -fx-max-width: 760px;
+}
+
+.card-title {
+    -fx-font-size: 13px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #0b1d3a;
+}
+
+.value {
+    -fx-font-weight: 700;
+    -fx-text-fill: #12264a;
+}
+
+.metric {
+    -fx-font-size: 34px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #3462f5;
+}
+
+.note {
+    -fx-text-fill: #62728d;
+    -fx-font-style: italic;
+}
+
+.body-text {
+    -fx-text-fill: #43536e;
+    -fx-font-size: 14px;
+}
+
+/* Reloj destacado dentro del Dashboard */
+.clock-large {
+    -fx-font-size: 32px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #0b1d3a;
+    -fx-font-family: Consolas, "Courier New", monospace;
+}
+
+.real-time-clock {
+    -fx-font-size: 24px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #52627a;
+    -fx-font-family: Consolas, "Courier New", monospace;
+}
+
+/* ==========================================================================
+   TARJETAS INTERACTIVAS DEL DASHBOARD
+   ========================================================================== */
+
+.dashboard-card {
+    -fx-background-color: #ffffff;
+
+    -fx-padding: 16px;
+
+    /* Borde */
+    -fx-border-color: #cbd5e1;
+    -fx-border-width: 2px;
+    -fx-border-style: solid;
+
+    /* Esquinas */
+    -fx-background-radius: 10px;
+    -fx-border-radius: 10px;
+
+    /* Sombra */
+    -fx-effect: dropshadow(
+        three-pass-box,
+        rgba(11, 29, 58, 0.15),
+        8,
+        0,
+        0,
+        2
+    );
+
+    -fx-cursor: hand;
+}
+
+
+/* Hover */
+.dashboard-card:hover {
+    -fx-background-color: #f0f4ff;
+
+    -fx-border-color: #3462f5;
+    -fx-border-width: 2px;
+
+    -fx-effect: dropshadow(
+        three-pass-box,
+        rgba(52, 98, 245, 0.35),
+        10,
+        0,
+        0,
+        4
+    );
+}
+
+/* ==========================================================================
+   5. MÓDULOS ESPECÍFICOS (E/S, ARCHIVOS, LOGS Y BARRAS)
+   ========================================================================== */
+.device-on { 
+    -fx-text-fill: #158a55; 
+    -fx-font-weight: 700; 
+}
+
+.device-off { 
+    -fx-text-fill: #df4757; 
+    -fx-font-weight: 700; 
+}
+
+.file-line, 
+.file-tree-static { 
+    -fx-font-family: Consolas, monospace; 
+    -fx-text-fill: #3b4e6b; 
+}
+
+.log-area { 
+    -fx-control-inner-background: #20304a; 
+    -fx-text-fill: #e2e8f0; 
+    -fx-font-family: Consolas, monospace; 
+    -fx-font-size: 11px; 
+    -fx-background-radius: 8; 
+}
+
+.full-log { 
+    -fx-font-size: 13px; 
+}
+
+.small-button { 
+    -fx-background-color: transparent; 
+    -fx-text-fill: #3462f5; 
+    -fx-padding: 2 4; 
+    -fx-cursor: hand;
+}
+
+.small-button:hover {
+    -fx-underline: true;
+}
+
+.progress-bar > .track { 
+    -fx-background-color: #e7edf6; 
+    -fx-background-radius: 8; 
+}
+
+.progress-bar > .bar { 
+    -fx-background-color: #3462f5; 
+    -fx-background-radius: 8; 
+}
+
