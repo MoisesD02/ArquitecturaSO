@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.simuladorso.ui.controllers.ProcessesController"
+      spacing="20" styleClass="content-container">
+
+    <!-- Encabezado -->
+    <VBox spacing="4">
+        <Label text="Gestión de Procesos" styleClass="page-title"/>
+        <Label text="Haz un clic en una tarjeta para ver la explicación, o doble clic para abrir el simulador del algoritmo." styleClass="page-subtitle"/>
+    </VBox>
+
+    <Separator/>
+
+    <!-- Panel de Selección (GridPane) -->
+    <GridPane hgap="16" vgap="16">
+        <columnConstraints>
+            <ColumnConstraints percentWidth="33.33" hgrow="ALWAYS"/>
+            <ColumnConstraints percentWidth="33.33" hgrow="ALWAYS"/>
+            <ColumnConstraints percentWidth="33.33" hgrow="ALWAYS"/>
+        </columnConstraints>
+        <rowConstraints>
+            <RowConstraints vgrow="SOMETIMES"/>
+            <RowConstraints vgrow="SOMETIMES"/>
+            <RowConstraints vgrow="SOMETIMES"/>
+        </rowConstraints>
+
+        <!-- 1. FCFS (Configurada con evento de clic en la tarjeta) -->
+        <VBox fx:id="cardFcfs" GridPane.columnIndex="0" GridPane.rowIndex="0"
+              spacing="10" styleClass="card, interactive-card"
+              onMouseClicked="#handleFcfsCardClick">
+            <Label text="FCFS" styleClass="card-title"/>
+            <Label text="First-Come, First-Served" styleClass="muted"/>
+            <Label text="Atención por orden estricto de llegada sin desalojo." wrapText="true" styleClass="body-text"/>
+            <Button fx:id="btnFcfs" text="Cargar FCFS" onAction="#handleFcfsBtnClick" maxWidth="Infinity" styleClass="button-primary"/>
+        </VBox>
+
+        <!-- 2. SJF -->
+        <VBox GridPane.columnIndex="1" GridPane.rowIndex="0" spacing="10" styleClass="card, interactive-card">
+            <Label text="SJF" styleClass="card-title"/>
+            <Label text="Shortest Job First" styleClass="muted"/>
+            <Label text="Prioriza procesos con el tiempo de ráfaga más corto." wrapText="true" styleClass="body-text"/>
+            <Button fx:id="btnSjf" text="Cargar SJF" maxWidth="Infinity" styleClass="button-primary"/>
+        </VBox>
+
+        <!-- 3. Round Robin -->
+        <VBox GridPane.columnIndex="2" GridPane.rowIndex="0" spacing="10" styleClass="card, interactive-card">
+            <Label text="Round Robin" styleClass="card-title"/>
+            <Label text="Asignación por Quantum" styleClass="muted"/>
+            <Label text="Turnos equitativos de tiempo con interrupción por Quantum." wrapText="true" styleClass="body-text"/>
+            <Button fx:id="btnRoundRobin" text="Cargar Round Robin" maxWidth="Infinity" styleClass="button-primary"/>
+        </VBox>
+
+        <!-- 4. Por Prioridad -->
+        <VBox GridPane.columnIndex="0" GridPane.rowIndex="1" spacing="10" styleClass="card, interactive-card">
+            <Label text="Por Prioridad" styleClass="card-title"/>
+            <Label text="Priority Scheduling" styleClass="muted"/>
+            <Label text="Ejecuta los procesos en función de su nivel de importancia." wrapText="true" styleClass="body-text"/>
+            <Button fx:id="btnPrioridad" text="Cargar Prioridad" maxWidth="Infinity" styleClass="button-primary"/>
+        </VBox>
+
+        <!-- 5. Colas Múltiples -->
+        <VBox GridPane.columnIndex="1" GridPane.rowIndex="1" spacing="10" styleClass="card, interactive-card">
+            <Label text="Colas Múltiples" styleClass="card-title"/>
+            <Label text="Multilevel Queue" styleClass="muted"/>
+            <Label text="Divide los procesos en colas separadas según su tipo." wrapText="true" styleClass="body-text"/>
+            <Button fx:id="btnColasMultiples" text="Cargar Colas M." maxWidth="Infinity" styleClass="button-primary"/>
+        </VBox>
+
+        <!-- 6. Dos Niveles -->
+        <VBox GridPane.columnIndex="2" GridPane.rowIndex="1" spacing="10" styleClass="card, interactive-card">
+            <Label text="Dos Niveles" styleClass="card-title"/>
+            <Label text="Two-Level Scheduling" styleClass="muted"/>
+            <Label text="Combina planificación entre memoria principal y secundaria." wrapText="true" styleClass="body-text"/>
+            <Button fx:id="btnDosNiveles" text="Cargar Dos Niveles" maxWidth="Infinity" styleClass="button-primary"/>
+        </VBox>
+
+        <!-- 7. Garantizada -->
+        <VBox GridPane.columnIndex="0" GridPane.rowIndex="2" spacing="10" styleClass="card, interactive-card">
+            <Label text="Garantizada" styleClass="card-title"/>
+            <Label text="Guaranteed Scheduling" styleClass="muted"/>
+            <Label text="Garantiza un 1/n de la CPU a cada proceso activo." wrapText="true" styleClass="body-text"/>
+            <Button fx:id="btnGarantizada" text="Cargar Garantizada" maxWidth="Infinity" styleClass="button-primary"/>
+        </VBox>
+
+    </GridPane>
+
+    <!-- Área dinámica donde se proyectará la explicación/animación de FCFS -->
+    <VBox fx:id="algorithmWorkspace" VBox.vgrow="ALWAYS" spacing="12" styleClass="card">
+        <Label text="Vista del Algoritmo" styleClass="card-title"/>
+        <Label text="Haz un clic en cualquiera de los algoritmos para desplegar su guía teórica e ilustración de funcionamiento." styleClass="muted"/>
+    </VBox>
+
+</VBox>

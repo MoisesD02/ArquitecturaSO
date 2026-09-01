@@ -13,7 +13,7 @@ public class MainApp extends Application {
     public void start(Stage stage) throws IOException {
         FXMLLoader loader = new FXMLLoader(MainApp.class.getResource("/fxml/main-view.fxml"));
 
-        Scene scene = new Scene(loader.load(), 1280, 720);
+        Scene scene = new Scene(loader.load(), 1080, 640);
         scene.getStylesheets().add(MainApp.class.getResource("/css/minios.css").toExternalForm());
 
         stage.setTitle("simuladorSO - MiniOS Simulator");
