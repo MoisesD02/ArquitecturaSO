@@ -38,19 +38,20 @@
             <Region VBox.vgrow="ALWAYS"/>
             <Separator/>
 
-            <!-- Controles con mayor separación entre sí para evitar clics accidentales -->
+            <!-- Controles con IDs asignados para control de estado -->
             <Label text="CONTROLES DEL NÚCLEO" styleClass="sidebar-caption"/>
             <VBox spacing="12">
-                <Button text="▶  Iniciar SO" onAction="#handleStart" maxWidth="Infinity" styleClass="button-success"/>
-                <Button text="■  Detener" onAction="#handleStop" maxWidth="Infinity" styleClass="button-danger"/>
-                <Button text="▶|  Avanzar reloj" onAction="#handleAdvanceClock" maxWidth="Infinity" styleClass="button-secondary"/>
-                <Button text="↻  Reiniciar" onAction="#handleRestart" maxWidth="Infinity" styleClass="button-primary"/>
+                <Button fx:id="btnStart" text="▶  Iniciar SO" onAction="#handleStart" maxWidth="Infinity" styleClass="button-success"/>
+                <Button fx:id="btnStop" text="■  Detener" onAction="#handleStop" maxWidth="Infinity" styleClass="button-danger"/>
+                <Button fx:id="btnAdvanceClock" text="▶|  Avanzar reloj" onAction="#handleAdvanceClock" maxWidth="Infinity" styleClass="button-secondary"/>
+                <Button fx:id="btnRestart" text="↻  Reiniciar" onAction="#handleRestart" maxWidth="Infinity" styleClass="button-primary"/>
             </VBox>
         </VBox>
     </left>
 
     <center>
-        <StackPane styleClass="content-area">
+        <!-- StackPane con fx:id para cargar vistas dinámicas -->
+        <StackPane fx:id="centerStackPane" styleClass="content-area">
             <padding><Insets top="24" right="24" bottom="24" left="24"/></padding>
 
             <VBox fx:id="dashboardPage" spacing="18">
@@ -155,17 +156,7 @@
                 </GridPane>
             </VBox>
 
-            <!-- PÁGINAS SECUNDARIAS SIN CAMBIOS -->
-            <VBox fx:id="processesPage" visible="false" managed="false" spacing="18">
-                <Label text="Procesos" styleClass="page-title"/>
-                <VBox spacing="12" styleClass="card wide-card">
-                    <Label text="Clase Proceso" styleClass="card-title"/>
-                    <Label text="El núcleo base ya contempla la representación de un proceso mediante PID, nombre, estado y memoria. La creación, planificación y cambio de estados se implementarán en los siguientes avances." wrapText="true" styleClass="body-text"/>
-                    <Separator/>
-                    <Label text="Estado actual: 0 procesos activos" styleClass="value"/>
-                </VBox>
-            </VBox>
-
+            <!-- PÁGINAS SECUNDARIAS ESTÁTICAS -->
             <VBox fx:id="memoryPage" visible="false" managed="false" spacing="18">
                 <Label text="Memoria" styleClass="page-title"/>
                 <VBox spacing="12" styleClass="card wide-card">
