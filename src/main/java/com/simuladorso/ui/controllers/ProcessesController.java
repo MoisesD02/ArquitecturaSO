@@ -1,104 +1,1759 @@
 package com.simuladorso.ui.controllers;
 
+import com.simuladorso.process.Algoritmos.FCFS;
+import com.simuladorso.process.EstadoProceso;
+import com.simuladorso.process.Proceso;
+
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleStringProperty;
+
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+
 import javafx.fxml.FXML;
-import javafx.geometry.Pos;
+
+import javafx.scene.Node;
+
 import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
-import javafx.scene.input.MouseEvent;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
+
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+
 import javafx.util.Duration;
+
+import java.util.Comparator;
+
 
 public class ProcessesController {
 
-    @FXML private VBox cardFcfs;
-    @FXML private Button btnFcfs;
-    @FXML private VBox algorithmWorkspace;
+
+    // ==============================================
+    // NOMBRES DE ALGORITMOS
+    // ==============================================
+
+    private static final String FCFS_NOMBRE =
+            "FCFS";
+
+    private static final String SJF =
+            "SJF";
+
+    private static final String ROUND_ROBIN =
+            "Round Robin";
+
+    private static final String PRIORIDAD =
+            "Por Prioridad";
+
+    private static final String COLAS_MULTIPLES =
+            "Colas Múltiples";
+
+    private static final String GARANTIZADA =
+            "Planificación Garantizada";
+
+    private static final String DOS_NIVELES =
+            "Planificación a Dos Niveles";
+
+
+    // ==============================================
+    // DATOS
+    // ==============================================
+
+    private final ObservableList<Proceso> procesos =
+            FXCollections.observableArrayList();
+
+
+    private int siguientePid = 1;
+
+
+    // ==============================================
+    // FCFS
+    // ==============================================
+
+    private final FCFS fcfs =
+            new FCFS();
+
+
+    private FCFS.Resultado resultadoFCFS;
+
+
+    private int tiempoSimulacion = 0;
+
+
+    private Timeline timeline;
+
+
+    private boolean simulacionIniciada = false;
+
+
+    // ==============================================
+    // SELECTOR
+    // ==============================================
+
+    @FXML
+    private ComboBox<String> cmbAlgorithm;
+
+
+    @FXML
+    private HBox quantumContainer;
+
+
+    @FXML
+    private TextField txtQuantum;
+
+
+    // ==============================================
+    // FORMULARIO
+    // ==============================================
+
+    @FXML
+    private TextField txtProcessName;
+
+
+    @FXML
+    private TextField txtArrivalTime;
+
+
+    @FXML
+    private TextField txtBurstTime;
+
+
+    @FXML
+    private VBox priorityContainer;
+
+
+    @FXML
+    private ComboBox<Integer> cmbPriority;
+
+
+    @FXML
+    private VBox queueContainer;
+
+
+    @FXML
+    private ComboBox<String> cmbQueue;
+
+
+    @FXML
+    private VBox memoryContainer;
+
+
+    @FXML
+    private TextField txtMemory;
+
+
+    @FXML
+    private Label lblFormMessage;
+
+
+    // ==============================================
+    // TABLA
+    // ==============================================
+
+    @FXML
+    private TableView<Proceso> tblProcesses;
+
+
+    @FXML
+    private TableColumn<Proceso, String> colPid;
+
+
+    @FXML
+    private TableColumn<Proceso, String> colName;
+
+
+    @FXML
+    private TableColumn<Proceso, Integer> colArrival;
+
+
+    @FXML
+    private TableColumn<Proceso, Integer> colBurst;
+
+
+    @FXML
+    private TableColumn<Proceso, Integer> colRemaining;
+
+
+    @FXML
+    private TableColumn<Proceso, Integer> colPriority;
+
+
+    @FXML
+    private TableColumn<Proceso, String> colQueue;
+
+
+    @FXML
+    private TableColumn<Proceso, String> colMemory;
+
+
+    @FXML
+    private TableColumn<Proceso, String> colState;
+
+
+    // ==============================================
+    // COLA
+    // ==============================================
+
+    @FXML
+    private HBox readyQueueContainer;
+
+
+    // ==============================================
+    // BOTONES
+    // ==============================================
+
+    @FXML
+    private Button btnExecute;
+
+
+    @FXML
+    private Button btnStep;
+
+
+    // ==============================================
+    // CPU
+    // ==============================================
+
+    @FXML
+    private Label lblSimulationTime;
+
+
+    @FXML
+    private Label lblCpuState;
+
+
+    @FXML
+    private Label lblCurrentProcess;
+
+
+    @FXML
+    private Label lblRemainingTime;
+
+
+    @FXML
+    private ProgressBar cpuProgress;
+
+
+    // ==============================================
+    // GANTT
+    // ==============================================
+
+    @FXML
+    private HBox ganttContainer;
+
+
+    @FXML
+    private Label lblGanttEmpty;
+
+
+    // ==============================================
+    // RESULTADOS
+    // ==============================================
+
+    @FXML
+    private Label lblAverageWait;
+
+
+    @FXML
+    private Label lblAverageResponse;
+
+
+    @FXML
+    private Label lblExecutionTime;
+
+
+    // ==============================================
+    // INITIALIZE
+    // ==============================================
 
     @FXML
     public void initialize() {
-        // Inicialización
+
+        configurarSelectorAlgoritmos();
+
+        configurarCamposDinamicos();
+
+        configurarTabla();
+
+
+        tblProcesses.setItems(
+                procesos
+        );
+
+
+        cmbAlgorithm
+                .getSelectionModel()
+                .select(FCFS_NOMBRE);
+
+
+        actualizarInterfazSegunAlgoritmo();
+
+        actualizarColaListos();
+
+        actualizarControles();
     }
 
-    /**
-     * Evento al tocar cualquier parte de la tarjeta de FCFS.
-     * Si es 1 clic -> Muestra la explicación/animación conceptual en el workspace.
-     * Si es 2 clics -> Ejecuta la acción de cargar la sección del algoritmo.
-     */
+
+    // ==============================================
+    // SELECTOR
+    // ==============================================
+
+    private void configurarSelectorAlgoritmos() {
+
+        cmbAlgorithm.setItems(
+
+                FXCollections.observableArrayList(
+
+                        FCFS_NOMBRE,
+                        SJF,
+                        ROUND_ROBIN,
+                        PRIORIDAD,
+                        COLAS_MULTIPLES,
+                        GARANTIZADA,
+                        DOS_NIVELES
+                )
+        );
+
+
+        cmbAlgorithm
+                .valueProperty()
+                .addListener(
+                        (observable,
+                         anterior,
+                         actual) -> {
+
+
+                            if (actual != null
+                                    && !actual.equals(anterior)) {
+
+                                reiniciarDatosSimulacion();
+
+                                actualizarInterfazSegunAlgoritmo();
+                            }
+                        }
+                );
+    }
+
+
+    private void configurarCamposDinamicos() {
+
+        cmbPriority.setItems(
+
+                FXCollections.observableArrayList(
+                        1,
+                        2,
+                        3
+                )
+        );
+
+
+        cmbPriority
+                .getSelectionModel()
+                .select(Integer.valueOf(1));
+
+
+        cmbQueue.setItems(
+
+                FXCollections.observableArrayList(
+
+                        "Sistema",
+                        "Interactivo",
+                        "Segundo plano"
+                )
+        );
+
+
+        cmbQueue
+                .getSelectionModel()
+                .selectFirst();
+    }
+
+
+    // ==============================================
+    // TABLA
+    // ==============================================
+
+    private void configurarTabla() {
+
+        tblProcesses.setColumnResizePolicy(
+                TableView.CONSTRAINED_RESIZE_POLICY
+        );
+
+
+        colPid.setCellValueFactory(
+                data ->
+                        new SimpleStringProperty(
+                                String.format(
+                                        "P%03d",
+                                        data.getValue()
+                                                .getPid()
+                                )
+                        )
+        );
+
+
+        colName.setCellValueFactory(
+                data ->
+                        new SimpleStringProperty(
+                                data.getValue()
+                                        .getNombre()
+                        )
+        );
+
+
+        colArrival.setCellValueFactory(
+                data ->
+                        new SimpleIntegerProperty(
+                                data.getValue()
+                                        .getTiempoLlegada()
+                        ).asObject()
+        );
+
+
+        colBurst.setCellValueFactory(
+                data ->
+                        new SimpleIntegerProperty(
+                                data.getValue()
+                                        .getRafagaCPU()
+                        ).asObject()
+        );
+
+
+        colRemaining.setCellValueFactory(
+                data ->
+                        new SimpleIntegerProperty(
+                                data.getValue()
+                                        .getTiempoRestante()
+                        ).asObject()
+        );
+
+
+        colPriority.setCellValueFactory(
+                data ->
+                        new SimpleIntegerProperty(
+                                data.getValue()
+                                        .getPrioridad()
+                        ).asObject()
+        );
+
+
+        colQueue.setCellValueFactory(
+                data ->
+                        new SimpleStringProperty(
+                                data.getValue()
+                                        .getCola()
+                        )
+        );
+
+
+        colMemory.setCellValueFactory(
+                data ->
+                        new SimpleStringProperty(
+                                data.getValue()
+                                        .getMemoriaMB()
+                                        + " MB"
+                        )
+        );
+
+
+        colState.setCellValueFactory(
+                data ->
+                        new SimpleStringProperty(
+                                data.getValue()
+                                        .getEstado()
+                                        .name()
+                        )
+        );
+    }
+
+
+    // ==============================================
+    // INTERFAZ DINÁMICA
+    // ==============================================
+
+    private void actualizarInterfazSegunAlgoritmo() {
+
+        String algoritmo =
+                cmbAlgorithm.getValue();
+
+
+        mostrarNodo(
+                priorityContainer,
+                PRIORIDAD.equals(algoritmo)
+        );
+
+
+        mostrarNodo(
+                queueContainer,
+                COLAS_MULTIPLES.equals(algoritmo)
+        );
+
+
+        mostrarNodo(
+                memoryContainer,
+                DOS_NIVELES.equals(algoritmo)
+        );
+
+
+        mostrarNodo(
+                quantumContainer,
+                ROUND_ROBIN.equals(algoritmo)
+        );
+
+
+        colRemaining.setVisible(
+                ROUND_ROBIN.equals(algoritmo)
+        );
+
+
+        colPriority.setVisible(
+                PRIORIDAD.equals(algoritmo)
+        );
+
+
+        colQueue.setVisible(
+                COLAS_MULTIPLES.equals(algoritmo)
+        );
+
+
+        colMemory.setVisible(
+                DOS_NIVELES.equals(algoritmo)
+        );
+
+
+        limpiarFormulario();
+    }
+
+
+    private void mostrarNodo(
+            Node nodo,
+            boolean mostrar) {
+
+        nodo.setVisible(mostrar);
+
+        nodo.setManaged(mostrar);
+    }
+
+
+    // ==============================================
+    // AGREGAR PROCESO
+    // ==============================================
+
     @FXML
-    private void handleFcfsCardClick(MouseEvent event) {
-        if (event.getClickCount() == 1) {
-            mostrarExplicacionFCFS();
-        } else if (event.getClickCount() == 2) {
-            abrirSimuladorFCFS();
+    private void handleAddProcess() {
+
+        lblFormMessage.setText("");
+
+
+        if (simulacionIniciada) {
+
+            mostrarError(
+                    "Reinicie la simulación para agregar nuevos procesos."
+            );
+
+            return;
+        }
+
+
+        try {
+
+            String nombre =
+                    txtProcessName
+                            .getText()
+                            .trim();
+
+
+            if (nombre.isEmpty()) {
+
+                mostrarError(
+                        "Ingrese el nombre del proceso."
+                );
+
+                return;
+            }
+
+
+            int llegada =
+                    leerEnteroNoNegativo(
+                            txtArrivalTime,
+                            "tiempo de llegada"
+                    );
+
+
+            int rafaga =
+                    leerEnteroPositivo(
+                            txtBurstTime,
+                            "ráfaga CPU"
+                    );
+
+
+            String algoritmo =
+                    cmbAlgorithm.getValue();
+
+
+            int prioridad = 0;
+
+            String cola = "";
+
+            int memoria = 0;
+
+
+            if (PRIORIDAD.equals(algoritmo)) {
+
+                prioridad =
+                        cmbPriority.getValue();
+            }
+
+
+            if (COLAS_MULTIPLES.equals(algoritmo)) {
+
+                cola =
+                        cmbQueue.getValue();
+            }
+
+
+            if (DOS_NIVELES.equals(algoritmo)) {
+
+                memoria =
+                        leerEnteroPositivo(
+                                txtMemory,
+                                "memoria requerida"
+                        );
+            }
+
+
+            Proceso proceso =
+                    new Proceso(
+
+                            siguientePid++,
+
+                            nombre,
+
+                            llegada,
+
+                            rafaga,
+
+                            memoria,
+
+                            prioridad,
+
+                            cola
+                    );
+
+
+            if (llegada == 0) {
+
+                proceso.setEstado(
+                        EstadoProceso.LISTO
+                );
+
+            } else {
+
+                proceso.setEstado(
+                        EstadoProceso.NUEVO
+                );
+            }
+
+
+            procesos.add(
+                    proceso
+            );
+
+
+            ordenarTablaPorLlegada();
+
+
+            actualizarColaListos();
+
+            actualizarControles();
+
+            limpiarFormulario();
+
+
+        } catch (IllegalArgumentException e) {
+
+            mostrarError(
+                    e.getMessage()
+            );
         }
     }
 
-    /**
-     * Evento al presionar el botón azul directamente.
-     */
+
+    // ==============================================
+    // CARGAR EJEMPLO
+    // ==============================================
+
     @FXML
-    private void handleFcfsBtnClick() {
-        // Si se presiona el botón directamente, mostramos la explicación
-        // pero avisamos que requiere doble clic para ingresar.
-        mostrarExplicacionFCFS();
+    private void handleLoadExample() {
+
+        reiniciarDatosSimulacion();
+
+
+        String algoritmo =
+                cmbAlgorithm.getValue();
+
+
+        /*
+         * Por ahora nuestro ejemplo funcional
+         * está preparado para FCFS.
+         */
+        if (FCFS_NOMBRE.equals(algoritmo)) {
+
+
+            agregarEjemplo(
+                    "P1",
+                    0,
+                    5
+            );
+
+
+            agregarEjemplo(
+                    "P2",
+                    1,
+                    3
+            );
+
+
+            agregarEjemplo(
+                    "P3",
+                    2,
+                    4
+            );
+        }
+
+
+        actualizarColaListos();
+
+        actualizarControles();
     }
 
-    /**
-     * Renderiza la explicación y simulación gráfica conceptual de FCFS.
-     */
-    private void mostrarExplicacionFCFS() {
-        algorithmWorkspace.getChildren().clear();
 
-        Label titulo = new Label("Algoritmo FCFS (First-Come, First-Served)");
-        titulo.getStyleClass().add("card-title");
+    private void agregarEjemplo(
+            String nombre,
+            int llegada,
+            int rafaga) {
 
-        Label desc = new Label("• Tipo: No Apropiativo (Sin Desalojo).\n" +
-                "• Funcionamiento: El primer proceso en llegar a la Cola de Listos es el primero en ser atendido por la CPU.\n" +
-                "• Ventaja: Muy fácil de implementar y libre de inanición.\n" +
-                "• Desventaja: Susceptible al 'Efecto Convoy' (un proceso largo retrasa a todos los demás).");
-        desc.setWrapText(true);
-        desc.getStyleClass().add("body-text");
 
-        // Simulación visual simple (Barra de progreso de ejemplo de llegada)
-        Label demoTitle = new Label("Demostración de flujo continuo:");
-        demoTitle.getStyleClass().add("muted");
+        Proceso proceso =
+                new Proceso(
 
-        HBox colaProcesos = new HBox(10);
-        colaProcesos.setAlignment(Pos.CENTER_LEFT);
+                        siguientePid++,
 
-        Label p1 = new Label("P1 (Atendiendo...)");
-        p1.setStyle("-fx-background-color: #2563eb; -fx-text-fill: white; -fx-padding: 8 12; -fx-background-radius: 6;");
+                        nombre,
 
-        Label p2 = new Label("P2 (En espera)");
-        p2.setStyle("-fx-background-color: #374151; -fx-text-fill: white; -fx-padding: 8 12; -fx-background-radius: 6;");
+                        llegada,
 
-        Label p3 = new Label("P3 (En espera)");
-        p3.setStyle("-fx-background-color: #374151; -fx-text-fill: white; -fx-padding: 8 12; -fx-background-radius: 6;");
+                        rafaga
+                );
 
-        colaProcesos.getChildren().addAll(p1, p2, p3);
 
-        Label indicacion = new Label("💡 Tip: Haz doble clic sobre el botón azul para ingresar a la mesa de trabajo de FCFS.");
-        indicacion.setStyle("-fx-font-size: 11px; -fx-text-fill: #9ca3af; -fx-font-style: italic;");
+        if (llegada == 0) {
 
-        algorithmWorkspace.getChildren().addAll(titulo, desc, demoTitle, colaProcesos, indicacion);
+            proceso.setEstado(
+                    EstadoProceso.LISTO
+            );
+
+        } else {
+
+            proceso.setEstado(
+                    EstadoProceso.NUEVO
+            );
+        }
+
+
+        procesos.add(
+                proceso
+        );
     }
 
-    /**
-     * Lógica para entrar al simulador completo de FCFS.
-     */
-    private void abrirSimuladorFCFS() {
-        algorithmWorkspace.getChildren().clear();
 
-        Label titulo = new Label("🚀 CORTEX FCFS: Entorno de Ejecución Cargar...");
-        titulo.getStyleClass().add("card-title");
+    // ==============================================
+    // EJECUTAR
+    // ==============================================
 
-        Label estado = new Label("Has ingresado al simulador interactivo de FCFS con doble clic. Aquí conectaremos la tabla de procesos y el diagrama de Gantt.");
-        estado.getStyleClass().add("body-text");
+    @FXML
+    private void handleExecute() {
 
-        algorithmWorkspace.getChildren().addAll(titulo, estado);
+
+        if (!FCFS_NOMBRE.equals(
+                cmbAlgorithm.getValue())) {
+
+            mostrarError(
+                    "Este algoritmo todavía no está implementado."
+            );
+
+            return;
+        }
+
+
+        if (procesos.isEmpty()) {
+
+            mostrarError(
+                    "Agregue al menos un proceso."
+            );
+
+            return;
+        }
+
+
+        prepararFCFS();
+
+
+        /*
+         * Evitamos crear más de una animación.
+         */
+        if (timeline != null) {
+
+            timeline.stop();
+        }
+
+
+        btnExecute.setDisable(true);
+
+        btnStep.setDisable(true);
+
+
+        timeline =
+                new Timeline(
+
+                        new KeyFrame(
+
+                                Duration.millis(700),
+
+                                event -> {
+
+                                    avanzarUnPasoFCFS();
+
+
+                                    if (tiempoSimulacion
+                                            >= resultadoFCFS
+                                            .getTiempoTotal()) {
+
+
+                                        timeline.stop();
+
+                                        finalizarFCFS();
+                                    }
+                                }
+                        )
+                );
+
+
+        timeline.setCycleCount(
+                Timeline.INDEFINITE
+        );
+
+
+        timeline.play();
+    }
+
+
+    // ==============================================
+    // PASO A PASO
+    // ==============================================
+
+    @FXML
+    private void handleStep() {
+
+
+        if (!FCFS_NOMBRE.equals(
+                cmbAlgorithm.getValue())) {
+
+            mostrarError(
+                    "Este algoritmo todavía no está implementado."
+            );
+
+            return;
+        }
+
+
+        if (procesos.isEmpty()) {
+
+            mostrarError(
+                    "Agregue al menos un proceso."
+            );
+
+            return;
+        }
+
+
+        prepararFCFS();
+
+
+        if (tiempoSimulacion
+                < resultadoFCFS
+                .getTiempoTotal()) {
+
+
+            avanzarUnPasoFCFS();
+        }
+
+
+        if (tiempoSimulacion
+                >= resultadoFCFS
+                .getTiempoTotal()) {
+
+
+            finalizarFCFS();
+        }
+    }
+
+
+    // ==============================================
+    // PREPARAR FCFS
+    // ==============================================
+
+    private void prepararFCFS() {
+
+
+        if (simulacionIniciada) {
+
+            return;
+        }
+
+
+        resultadoFCFS =
+                fcfs.planificar(
+                        procesos
+                );
+
+
+        tiempoSimulacion = 0;
+
+        simulacionIniciada = true;
+
+
+        /*
+         * Mostramos el estado inicial en t = 0.
+         */
+        actualizarEstadosFCFS();
+
+        actualizarVistaCPU();
+
+        actualizarColaListos();
+
+        actualizarGantt();
+
+        tblProcesses.refresh();
+    }
+
+
+    // ==============================================
+    // UN PASO DE FCFS
+    // ==============================================
+
+    private void avanzarUnPasoFCFS() {
+
+
+        if (resultadoFCFS == null) {
+
+            return;
+        }
+
+
+        if (tiempoSimulacion
+                >= resultadoFCFS
+                .getTiempoTotal()) {
+
+            return;
+        }
+
+
+        /*
+         * Ejecutamos una unidad temporal.
+         */
+        tiempoSimulacion++;
+
+
+        actualizarEstadosFCFS();
+
+        actualizarVistaCPU();
+
+        actualizarColaListos();
+
+        actualizarGantt();
+
+        tblProcesses.refresh();
+    }
+
+
+    // ==============================================
+    // ESTADOS
+    // ==============================================
+
+    private void actualizarEstadosFCFS() {
+
+
+        for (Proceso proceso : procesos) {
+
+
+            /*
+             * Todavía no ha llegado.
+             */
+            if (tiempoSimulacion
+                    < proceso.getTiempoLlegada()) {
+
+
+                proceso.setEstado(
+                        EstadoProceso.NUEVO
+                );
+
+
+                proceso.setTiempoRestante(
+                        proceso.getRafagaCPU()
+                );
+
+
+                continue;
+            }
+
+
+            /*
+             * Ya terminó.
+             */
+            if (proceso.getTiempoFinalizacion()
+                    <= tiempoSimulacion) {
+
+
+                proceso.setEstado(
+                        EstadoProceso.TERMINADO
+                );
+
+
+                proceso.setTiempoRestante(
+                        0
+                );
+
+
+                continue;
+            }
+
+
+            /*
+             * Está utilizando la CPU.
+             */
+            if (proceso.getTiempoInicio()
+                    <= tiempoSimulacion
+                    && tiempoSimulacion
+                    < proceso.getTiempoFinalizacion()) {
+
+
+                proceso.setEstado(
+                        EstadoProceso.EJECUCION
+                );
+
+
+                int restante =
+                        proceso.getTiempoFinalizacion()
+                                - tiempoSimulacion;
+
+
+                proceso.setTiempoRestante(
+                        restante
+                );
+
+
+                continue;
+            }
+
+
+            /*
+             * Ya llegó pero todavía no le toca.
+             */
+            proceso.setEstado(
+                    EstadoProceso.LISTO
+            );
+
+
+            proceso.setTiempoRestante(
+                    proceso.getRafagaCPU()
+            );
+        }
+    }
+
+
+    // ==============================================
+    // CPU
+    // ==============================================
+
+    private void actualizarVistaCPU() {
+
+
+        lblSimulationTime.setText(
+                String.valueOf(
+                        tiempoSimulacion
+                )
+        );
+
+
+        Proceso actual =
+                obtenerProcesoEnCPU();
+
+
+        if (actual == null) {
+
+
+            lblCpuState.setText(
+                    "LIBRE"
+            );
+
+
+            lblCurrentProcess.setText(
+                    "---"
+            );
+
+
+            lblRemainingTime.setText(
+                    "---"
+            );
+
+
+            cpuProgress.setProgress(
+                    0
+            );
+
+
+            return;
+        }
+
+
+        lblCpuState.setText(
+                "OCUPADA"
+        );
+
+
+        lblCurrentProcess.setText(
+
+                String.format(
+                        "P%03d - %s",
+                        actual.getPid(),
+                        actual.getNombre()
+                )
+        );
+
+
+        lblRemainingTime.setText(
+
+                String.valueOf(
+                        actual.getTiempoRestante()
+                )
+        );
+
+
+        double ejecutado =
+                actual.getRafagaCPU()
+                        - actual.getTiempoRestante();
+
+
+        double progreso =
+                ejecutado
+                        / actual.getRafagaCPU();
+
+
+        cpuProgress.setProgress(
+                progreso
+        );
+    }
+
+
+    private Proceso obtenerProcesoEnCPU() {
+
+
+        for (Proceso proceso : procesos) {
+
+
+            if (proceso.getEstado()
+                    == EstadoProceso.EJECUCION) {
+
+                return proceso;
+            }
+        }
+
+
+        return null;
+    }
+
+
+    // ==============================================
+    // COLA DE LISTOS
+    // ==============================================
+
+    private void actualizarColaListos() {
+
+
+        readyQueueContainer
+                .getChildren()
+                .clear();
+
+
+        procesos.stream()
+
+                .filter(
+                        proceso ->
+                                proceso.getEstado()
+                                        == EstadoProceso.LISTO
+                )
+
+                .sorted(
+
+                        Comparator
+                                .comparingInt(
+                                        Proceso::getTiempoLlegada
+                                )
+                                .thenComparingInt(
+                                        Proceso::getPid
+                                )
+                )
+
+                .forEach(
+                        proceso -> {
+
+
+                            if (!readyQueueContainer
+                                    .getChildren()
+                                    .isEmpty()) {
+
+
+                                Label flecha =
+                                        new Label(
+                                                "→"
+                                        );
+
+
+                                flecha
+                                        .getStyleClass()
+                                        .add(
+                                                "queue-arrow"
+                                        );
+
+
+                                readyQueueContainer
+                                        .getChildren()
+                                        .add(
+                                                flecha
+                                        );
+                            }
+
+
+                            Label etiqueta =
+                                    new Label(
+
+                                            String.format(
+                                                    "P%03d",
+                                                    proceso.getPid()
+                                            )
+                                    );
+
+
+                            etiqueta
+                                    .getStyleClass()
+                                    .add(
+                                            "queue-process"
+                                    );
+
+
+                            readyQueueContainer
+                                    .getChildren()
+                                    .add(
+                                            etiqueta
+                                    );
+                        }
+                );
+
+
+        if (readyQueueContainer
+                .getChildren()
+                .isEmpty()) {
+
+
+            Label vacia =
+                    new Label(
+                            "Sin procesos en espera"
+                    );
+
+
+            vacia
+                    .getStyleClass()
+                    .add(
+                            "muted"
+                    );
+
+
+            readyQueueContainer
+                    .getChildren()
+                    .add(
+                            vacia
+                    );
+        }
+    }
+
+
+    // ==============================================
+    // DIAGRAMA DE GANTT
+    // ==============================================
+
+    private void actualizarGantt() {
+
+
+        ganttContainer
+                .getChildren()
+                .clear();
+
+
+        for (FCFS.Segmento segmento :
+                resultadoFCFS.getSegmentos()) {
+
+
+            /*
+             * Todavía no llegamos a este bloque.
+             */
+            if (segmento.getInicio()
+                    > tiempoSimulacion) {
+
+                continue;
+            }
+
+
+            VBox bloque =
+                    new VBox(3);
+
+
+            bloque.setMinWidth(
+                    Math.max(
+                            70,
+                            (segmento.getFin()
+                                    - segmento.getInicio())
+                                    * 35
+                    )
+            );
+
+
+            bloque.setAlignment(
+                    javafx.geometry.Pos.CENTER
+            );
+
+
+            Label nombre;
+
+
+            if (segmento.esCPUOciosa()) {
+
+
+                nombre =
+                        new Label(
+                                "LIBRE"
+                        );
+
+
+                bloque.setStyle(
+                        "-fx-background-color: #e2e8f0;"
+                                + "-fx-border-color: #94a3b8;"
+                                + "-fx-padding: 8;"
+                );
+
+
+            } else {
+
+
+                nombre =
+                        new Label(
+
+                                String.format(
+                                        "P%03d",
+                                        segmento
+                                                .getProceso()
+                                                .getPid()
+                                )
+                        );
+
+
+                nombre.setStyle(
+                        "-fx-text-fill: white;"
+                                + "-fx-font-weight: bold;"
+                );
+
+
+                bloque.setStyle(
+                        "-fx-background-color: #3462f5;"
+                                + "-fx-border-color: white;"
+                                + "-fx-padding: 8;"
+                );
+            }
+
+
+            Label tiempos =
+                    new Label(
+
+                            segmento.getInicio()
+                                    + " - "
+                                    + segmento.getFin()
+                    );
+
+
+            if (!segmento.esCPUOciosa()) {
+
+                tiempos.setStyle(
+                        "-fx-text-fill: white;"
+                );
+            }
+
+
+            bloque
+                    .getChildren()
+                    .addAll(
+                            nombre,
+                            tiempos
+                    );
+
+
+            ganttContainer
+                    .getChildren()
+                    .add(
+                            bloque
+                    );
+        }
+    }
+
+
+    // ==============================================
+    // FINALIZAR
+    // ==============================================
+
+    private void finalizarFCFS() {
+
+
+        tiempoSimulacion =
+                resultadoFCFS
+                        .getTiempoTotal();
+
+
+        actualizarEstadosFCFS();
+
+        actualizarVistaCPU();
+
+        actualizarColaListos();
+
+        actualizarGantt();
+
+        tblProcesses.refresh();
+
+
+        lblAverageWait.setText(
+
+                String.format(
+                        "%.2f",
+                        resultadoFCFS
+                                .getEsperaPromedio()
+                )
+        );
+
+
+        lblAverageResponse.setText(
+
+                String.format(
+                        "%.2f",
+                        resultadoFCFS
+                                .getRespuestaPromedio()
+                )
+        );
+
+
+        lblExecutionTime.setText(
+
+                resultadoFCFS
+                        .getTiempoTotal()
+                        + " u.t."
+        );
+
+
+        btnExecute.setDisable(
+                true
+        );
+
+
+        btnStep.setDisable(
+                true
+        );
+    }
+
+
+    // ==============================================
+    // REINICIAR
+    // ==============================================
+
+    @FXML
+    private void handleReset() {
+
+        reiniciarDatosSimulacion();
+
+        limpiarFormulario();
+    }
+
+
+    private void reiniciarDatosSimulacion() {
+
+
+        if (timeline != null) {
+
+            timeline.stop();
+
+            timeline = null;
+        }
+
+
+        procesos.clear();
+
+
+        siguientePid = 1;
+
+
+        resultadoFCFS = null;
+
+        tiempoSimulacion = 0;
+
+        simulacionIniciada = false;
+
+
+        lblCpuState.setText(
+                "LIBRE"
+        );
+
+
+        lblCurrentProcess.setText(
+                "---"
+        );
+
+
+        lblRemainingTime.setText(
+                "---"
+        );
+
+
+        lblSimulationTime.setText(
+                "0"
+        );
+
+
+        cpuProgress.setProgress(
+                0
+        );
+
+
+        ganttContainer
+                .getChildren()
+                .clear();
+
+
+        ganttContainer
+                .getChildren()
+                .add(
+                        lblGanttEmpty
+                );
+
+
+        lblAverageWait.setText(
+                "--"
+        );
+
+
+        lblAverageResponse.setText(
+                "--"
+        );
+
+
+        lblExecutionTime.setText(
+                "--"
+        );
+
+
+        actualizarColaListos();
+
+        actualizarControles();
+    }
+
+
+    // ==============================================
+    // CONTROLES
+    // ==============================================
+
+    private void actualizarControles() {
+
+
+        boolean puedeEjecutar =
+                !procesos.isEmpty()
+                        && FCFS_NOMBRE.equals(
+                        cmbAlgorithm.getValue()
+                );
+
+
+        btnExecute.setDisable(
+                !puedeEjecutar
+        );
+
+
+        btnStep.setDisable(
+                !puedeEjecutar
+        );
+    }
+
+
+    // ==============================================
+    // ORDEN TABLA
+    // ==============================================
+
+    private void ordenarTablaPorLlegada() {
+
+
+        FXCollections.sort(
+
+                procesos,
+
+                Comparator
+                        .comparingInt(
+                                Proceso::getTiempoLlegada
+                        )
+                        .thenComparingInt(
+                                Proceso::getPid
+                        )
+        );
+    }
+
+
+    // ==============================================
+    // VALIDACIONES
+    // ==============================================
+
+    private int leerEnteroNoNegativo(
+            TextField campo,
+            String nombreCampo) {
+
+
+        String texto =
+                campo
+                        .getText()
+                        .trim();
+
+
+        try {
+
+
+            int valor =
+                    Integer.parseInt(
+                            texto
+                    );
+
+
+            if (valor < 0) {
+
+                throw new IllegalArgumentException(
+
+                        "El "
+                                + nombreCampo
+                                + " no puede ser negativo."
+                );
+            }
+
+
+            return valor;
+
+
+        } catch (NumberFormatException e) {
+
+
+            throw new IllegalArgumentException(
+
+                    "Ingrese un valor entero válido para "
+                            + nombreCampo
+                            + "."
+            );
+        }
+    }
+
+
+    private int leerEnteroPositivo(
+            TextField campo,
+            String nombreCampo) {
+
+
+        int valor =
+                leerEnteroNoNegativo(
+                        campo,
+                        nombreCampo
+                );
+
+
+        if (valor == 0) {
+
+            throw new IllegalArgumentException(
+
+                    "El "
+                            + nombreCampo
+                            + " debe ser mayor que 0."
+            );
+        }
+
+
+        return valor;
+    }
+
+
+    // ==============================================
+    // FORMULARIO
+    // ==============================================
+
+    private void limpiarFormulario() {
+
+
+        txtProcessName.clear();
+
+        txtArrivalTime.clear();
+
+        txtBurstTime.clear();
+
+        txtMemory.clear();
+
+        lblFormMessage.setText("");
+
+
+        if (!cmbPriority
+                .getItems()
+                .isEmpty()) {
+
+
+            cmbPriority
+                    .getSelectionModel()
+                    .select(
+                            Integer.valueOf(1)
+                    );
+        }
+
+
+        if (!cmbQueue
+                .getItems()
+                .isEmpty()) {
+
+
+            cmbQueue
+                    .getSelectionModel()
+                    .selectFirst();
+        }
+    }
+
+
+    private void mostrarError(
+            String mensaje) {
+
+
+        lblFormMessage
+                .setText(
+                        mensaje
+                );
     }
 }

@@ -20,6 +20,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
+import javafx.scene.control.ScrollPane;
 
 import java.io.IOException;
 import java.time.LocalTime;
@@ -186,24 +187,76 @@ public class MainController {
 
     @FXML
     private void showProcesses() {
-        if (!validarKernelActivo("acceder a la gestión de procesos")) {
+
+        if (!validarKernelActivo(
+                "acceder a la gestión de procesos")) {
+
             return;
         }
 
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/processes-view.fxml"));
-            VBox processesView = loader.load();
 
-            // Ocultamos las páginas estáticas y cargamos la vista externa en el StackPane
+            FXMLLoader loader =
+                    new FXMLLoader(
+                            getClass().getResource(
+                                    "/fxml/processes-view.fxml"
+                            )
+                    );
+
+            VBox processesView =
+                    loader.load();
+
+
+            // Contenedor con desplazamiento vertical
+            ScrollPane scrollPane =
+                    new ScrollPane(processesView);
+
+
+            // La vista ocupa todo el ancho disponible
+            scrollPane.setFitToWidth(true);
+
+
+            // No queremos desplazamiento horizontal
+            scrollPane.setHbarPolicy(
+                    ScrollPane.ScrollBarPolicy.NEVER
+            );
+
+
+            // Vertical solo cuando sea necesario
+            scrollPane.setVbarPolicy(
+                    ScrollPane.ScrollBarPolicy.AS_NEEDED
+            );
+
+
+            // Fondo transparente para conservar
+            // el diseño actual de MiniOS
+            scrollPane.setStyle(
+                    "-fx-background-color: transparent;"
+                            + "-fx-background: transparent;"
+            );
+
+
             ocultarPaginasEstaticas();
-            centerStackPane.getChildren().add(processesView);
 
-            // Marcamos el botón en la barra lateral
-            marcarBotonActivo(navProcesses);
+
+            centerStackPane
+                    .getChildren()
+                    .add(scrollPane);
+
+
+            marcarBotonActivo(
+                    navProcesses
+            );
+
 
         } catch (IOException e) {
+
             e.printStackTrace();
-            registrarEvento("ERROR: No se pudo cargar el archivo processes-view.fxml.");
+
+            registrarEvento(
+                    "ERROR: No se pudo cargar "
+                            + "el archivo processes-view.fxml."
+            );
         }
     }
 

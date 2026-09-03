@@ -60,18 +60,30 @@
                     <Label text="Estado general de los componentes fundamentales del simulador." styleClass="page-subtitle"/>
                 </VBox>
 
-                <!-- Cuadrícula 3x3 exacta -->
-                <GridPane hgap="16" vgap="16" VBox.vgrow="ALWAYS">
-                    <columnConstraints>
-                        <ColumnConstraints percentWidth="33.33" hgrow="ALWAYS"/>
-                        <ColumnConstraints percentWidth="33.33" hgrow="ALWAYS"/>
-                        <ColumnConstraints percentWidth="33.33" hgrow="ALWAYS"/>
-                    </columnConstraints>
-                    <rowConstraints>
-                        <RowConstraints percentHeight="33.33" vgrow="ALWAYS"/>
-                        <RowConstraints percentHeight="33.33" vgrow="ALWAYS"/>
-                        <RowConstraints percentHeight="33.33" vgrow="ALWAYS"/>
-                    </rowConstraints>
+                <!-- CONTENIDO DESPLAZABLE DEL DASHBOARD -->
+                <ScrollPane fitToWidth="true"
+                            hbarPolicy="NEVER"
+                            vbarPolicy="AS_NEEDED"
+                            VBox.vgrow="ALWAYS"
+                            styleClass="dashboard-scroll">
+
+                <content>
+
+                <GridPane hgap="16"
+                          vgap="16">
+
+                <columnConstraints>
+
+                    <ColumnConstraints percentWidth="33.33"
+                                       hgrow="ALWAYS"/>
+
+                    <ColumnConstraints percentWidth="33.33"
+                                       hgrow="ALWAYS"/>
+
+                    <ColumnConstraints percentWidth="33.33"
+                                       hgrow="ALWAYS"/>
+
+                </columnConstraints>
 
                     <!-- (1,1): RELOJ DEL SISTEMA -->
                     <VBox GridPane.columnIndex="0" GridPane.rowIndex="0" spacing="10" styleClass="dashboard-card">
@@ -154,6 +166,9 @@
                         <TextArea fx:id="dashboardLog" editable="false" wrapText="true" VBox.vgrow="ALWAYS" styleClass="log-area"/>
                     </VBox>
                 </GridPane>
+                </content>
+
+                </ScrollPane>
             </VBox>
 
             <!-- PÁGINAS SECUNDARIAS ESTÁTICAS -->

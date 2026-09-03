@@ -1,105 +1,379 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.control.Separator?>
-<?import javafx.scene.layout.ColumnConstraints?>
-<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
 <VBox xmlns="http://javafx.com/javafx/21"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.simuladorso.ui.controllers.ProcessesController"
-      spacing="20" styleClass="content-container">
+      spacing="14"
+      styleClass="content-container">
 
-    <!-- Encabezado -->
-    <VBox spacing="4">
+    <!-- ENCABEZADO -->
+    <VBox spacing="3">
         <Label text="Gestión de Procesos" styleClass="page-title"/>
-        <Label text="Haz un clic en una tarjeta para ver la explicación, o doble clic para abrir el simulador del algoritmo." styleClass="page-subtitle"/>
     </VBox>
 
     <Separator/>
 
-    <!-- Panel de Selección (GridPane) -->
-    <GridPane hgap="16" vgap="16">
-        <columnConstraints>
-            <ColumnConstraints percentWidth="33.33" hgrow="ALWAYS"/>
-            <ColumnConstraints percentWidth="33.33" hgrow="ALWAYS"/>
-            <ColumnConstraints percentWidth="33.33" hgrow="ALWAYS"/>
-        </columnConstraints>
-        <rowConstraints>
-            <RowConstraints vgrow="SOMETIMES"/>
-            <RowConstraints vgrow="SOMETIMES"/>
-            <RowConstraints vgrow="SOMETIMES"/>
-        </rowConstraints>
+    <!-- SELECTOR DEL ALGORITMO -->
+    <HBox alignment="CENTER_LEFT"
+          spacing="12"
+          styleClass="card, compact-card">
 
-        <!-- 1. FCFS (Configurada con evento de clic en la tarjeta) -->
-        <VBox fx:id="cardFcfs" GridPane.columnIndex="0" GridPane.rowIndex="0"
-              spacing="10" styleClass="card, interactive-card"
-              onMouseClicked="#handleFcfsCardClick">
-            <Label text="FCFS" styleClass="card-title"/>
-            <Label text="First-Come, First-Served" styleClass="muted"/>
-            <Label text="Atención por orden estricto de llegada sin desalojo." wrapText="true" styleClass="body-text"/>
-            <Button fx:id="btnFcfs" text="Cargar FCFS" onAction="#handleFcfsBtnClick" maxWidth="Infinity" styleClass="button-primary"/>
+        <Label text="Algoritmo de planificación"
+               styleClass="card-title"/>
+
+        <ComboBox fx:id="cmbAlgorithm"
+                  prefWidth="270"/>
+
+        <Region HBox.hgrow="ALWAYS"/>
+
+        <!-- Solo aparecerá en Round Robin -->
+        <HBox fx:id="quantumContainer"
+              alignment="CENTER_LEFT"
+              spacing="8"
+              visible="false"
+              managed="false">
+
+            <Label text="Quantum"
+                   styleClass="muted"/>
+
+            <TextField fx:id="txtQuantum"
+                       promptText="2"
+                       prefWidth="75"/>
+
+        </HBox>
+
+    </HBox>
+
+    <!-- FORMULARIO + TABLA -->
+    <HBox spacing="14"
+          prefHeight="285"
+          minHeight="285"
+          maxHeight="285">
+
+        <!-- FORMULARIO -->
+        <VBox prefWidth="285"
+              minWidth="265"
+              spacing="10"
+              styleClass="card">
+
+            <Label text="NUEVO PROCESO"
+                   styleClass="card-title"/>
+
+            <Label text="Nombre"
+                   styleClass="muted"/>
+
+            <TextField fx:id="txtProcessName"
+                       promptText="Ej. Proceso 1"/>
+
+            <HBox spacing="10">
+
+                <VBox spacing="5"
+                      HBox.hgrow="ALWAYS">
+
+                    <Label text="Tiempo de llegada"
+                           styleClass="muted"/>
+
+                    <TextField fx:id="txtArrivalTime"
+                               promptText="0"/>
+
+                </VBox>
+
+                <VBox spacing="5"
+                      HBox.hgrow="ALWAYS">
+
+                    <Label text="Ráfaga CPU"
+                           styleClass="muted"/>
+
+                    <TextField fx:id="txtBurstTime"
+                               promptText="5"/>
+
+                </VBox>
+
+            </HBox>
+
+            <!-- CAMPO DINÁMICO: PRIORIDAD -->
+            <VBox fx:id="priorityContainer"
+                  spacing="5"
+                  visible="false"
+                  managed="false">
+
+                <Label text="Prioridad"
+                       styleClass="muted"/>
+
+                <ComboBox fx:id="cmbPriority"
+                          maxWidth="Infinity"/>
+
+            </VBox>
+
+            <!-- CAMPO DINÁMICO: COLA -->
+            <VBox fx:id="queueContainer"
+                  spacing="5"
+                  visible="false"
+                  managed="false">
+
+                <Label text="Cola"
+                       styleClass="muted"/>
+
+                <ComboBox fx:id="cmbQueue"
+                          maxWidth="Infinity"/>
+
+            </VBox>
+
+            <!-- CAMPO DINÁMICO: MEMORIA -->
+            <VBox fx:id="memoryContainer"
+                  spacing="5"
+                  visible="false"
+                  managed="false">
+
+                <Label text="Memoria requerida (MB)"
+                       styleClass="muted"/>
+
+                <TextField fx:id="txtMemory"
+                           promptText="128"/>
+
+            </VBox>
+
+            <Label fx:id="lblFormMessage"
+                   text=""
+                   wrapText="true"
+                   styleClass="form-message"/>
+
+            <Region VBox.vgrow="ALWAYS"/>
+
+            <Button text="+  Agregar proceso"
+                    onAction="#handleAddProcess"
+                    maxWidth="Infinity"
+                    styleClass="button-primary"/>
+
         </VBox>
 
-        <!-- 2. SJF -->
-        <VBox GridPane.columnIndex="1" GridPane.rowIndex="0" spacing="10" styleClass="card, interactive-card">
-            <Label text="SJF" styleClass="card-title"/>
-            <Label text="Shortest Job First" styleClass="muted"/>
-            <Label text="Prioriza procesos con el tiempo de ráfaga más corto." wrapText="true" styleClass="body-text"/>
-            <Button fx:id="btnSjf" text="Cargar SJF" maxWidth="Infinity" styleClass="button-primary"/>
+
+        <!-- TABLA DE PROCESOS -->
+        <VBox spacing="10"
+              styleClass="card"
+              HBox.hgrow="ALWAYS">
+
+            <Label text="PROCESOS"
+                   styleClass="card-title"/>
+
+            <TableView fx:id="tblProcesses"
+                       VBox.vgrow="ALWAYS">
+
+                <columns>
+
+                    <TableColumn fx:id="colPid"
+                                 text="PID"/>
+
+                    <TableColumn fx:id="colName"
+                                 text="Nombre"/>
+
+                    <TableColumn fx:id="colArrival"
+                                 text="Llegada"/>
+
+                    <TableColumn fx:id="colBurst"
+                                 text="Ráfaga"/>
+
+                    <TableColumn fx:id="colRemaining"
+                                 text="Restante"
+                                 visible="false"/>
+
+                    <TableColumn fx:id="colPriority"
+                                 text="Prioridad"
+                                 visible="false"/>
+
+                    <TableColumn fx:id="colQueue"
+                                 text="Cola"
+                                 visible="false"/>
+
+                    <TableColumn fx:id="colMemory"
+                                 text="Memoria"
+                                 visible="false"/>
+
+                    <TableColumn fx:id="colState"
+                                 text="Estado"/>
+
+                </columns>
+
+            </TableView>
+
         </VBox>
 
-        <!-- 3. Round Robin -->
-        <VBox GridPane.columnIndex="2" GridPane.rowIndex="0" spacing="10" styleClass="card, interactive-card">
-            <Label text="Round Robin" styleClass="card-title"/>
-            <Label text="Asignación por Quantum" styleClass="muted"/>
-            <Label text="Turnos equitativos de tiempo con interrupción por Quantum." wrapText="true" styleClass="body-text"/>
-            <Button fx:id="btnRoundRobin" text="Cargar Round Robin" maxWidth="Infinity" styleClass="button-primary"/>
+    </HBox>
+
+
+    <!-- COLA DE LISTOS -->
+    <VBox spacing="9"
+          styleClass="card, compact-card">
+
+        <Label text="COLA DE LISTOS"
+               styleClass="card-title"/>
+
+        <HBox fx:id="readyQueueContainer"
+              alignment="CENTER_LEFT"
+              spacing="8"
+              minHeight="42"/>
+
+    </VBox>
+
+
+    <!-- BOTONES DE CONTROL -->
+    <HBox alignment="CENTER_LEFT"
+          spacing="10">
+
+        <Button text="Cargar ejemplo"
+                onAction="#handleLoadExample"
+                styleClass="button-secondary"/>
+
+        <!-- Los habilitaremos cuando implementemos FCFS -->
+        <Button fx:id="btnExecute"
+                text="▶  Ejecutar"
+                onAction="#handleExecute"
+                disable="true"
+                styleClass="button-success"/>
+
+        <Button fx:id="btnStep"
+                text="▶|  Paso"
+                onAction="#handleStep"
+                disable="true"
+                styleClass="button-secondary"/>
+
+        <Button text="↻  Reiniciar"
+                onAction="#handleReset"
+                styleClass="button-primary"/>
+
+    </HBox>
+
+
+    <!-- CPU + GANTT -->
+    <HBox spacing="14">
+
+        <!-- CPU -->
+        <VBox prefWidth="275"
+              spacing="9"
+              styleClass="card">
+
+            <Label text="CPU"
+                   styleClass="card-title"/>
+
+            <HBox spacing="7">
+
+                <Label text="Tiempo:"
+                       styleClass="muted"/>
+
+                <Label fx:id="lblSimulationTime"
+                       text="0"
+                       styleClass="value"/>
+
+            </HBox>
+
+            <HBox spacing="7">
+                <Label text="Estado:"
+                       styleClass="muted"/>
+
+                <Label fx:id="lblCpuState"
+                       text="LIBRE"
+                       styleClass="value"/>
+            </HBox>
+
+            <HBox spacing="7">
+                <Label text="Proceso:"
+                       styleClass="muted"/>
+
+                <Label fx:id="lblCurrentProcess"
+                       text="---"
+                       styleClass="value"/>
+            </HBox>
+
+            <HBox spacing="7">
+                <Label text="Tiempo restante:"
+                       styleClass="muted"/>
+
+                <Label fx:id="lblRemainingTime"
+                       text="---"
+                       styleClass="value"/>
+            </HBox>
+
+            <ProgressBar fx:id="cpuProgress"
+                         progress="0"
+                         maxWidth="Infinity"/>
+
         </VBox>
 
-        <!-- 4. Por Prioridad -->
-        <VBox GridPane.columnIndex="0" GridPane.rowIndex="1" spacing="10" styleClass="card, interactive-card">
-            <Label text="Por Prioridad" styleClass="card-title"/>
-            <Label text="Priority Scheduling" styleClass="muted"/>
-            <Label text="Ejecuta los procesos en función de su nivel de importancia." wrapText="true" styleClass="body-text"/>
-            <Button fx:id="btnPrioridad" text="Cargar Prioridad" maxWidth="Infinity" styleClass="button-primary"/>
+
+        <!-- GANTT -->
+        <VBox spacing="9"
+              styleClass="card"
+              HBox.hgrow="ALWAYS">
+
+            <Label text="DIAGRAMA DE GANTT"
+                   styleClass="card-title"/>
+
+            <HBox fx:id="ganttContainer"
+                  alignment="CENTER_LEFT"
+                  spacing="0"
+                  minHeight="82">
+
+                <Label fx:id="lblGanttEmpty"
+                       text="Esperando ejecución..."
+                       styleClass="muted"/>
+
+            </HBox>
+
         </VBox>
 
-        <!-- 5. Colas Múltiples -->
-        <VBox GridPane.columnIndex="1" GridPane.rowIndex="1" spacing="10" styleClass="card, interactive-card">
-            <Label text="Colas Múltiples" styleClass="card-title"/>
-            <Label text="Multilevel Queue" styleClass="muted"/>
-            <Label text="Divide los procesos en colas separadas según su tipo." wrapText="true" styleClass="body-text"/>
-            <Button fx:id="btnColasMultiples" text="Cargar Colas M." maxWidth="Infinity" styleClass="button-primary"/>
-        </VBox>
+    </HBox>
 
-        <!-- 6. Dos Niveles -->
-        <VBox GridPane.columnIndex="2" GridPane.rowIndex="1" spacing="10" styleClass="card, interactive-card">
-            <Label text="Dos Niveles" styleClass="card-title"/>
-            <Label text="Two-Level Scheduling" styleClass="muted"/>
-            <Label text="Combina planificación entre memoria principal y secundaria." wrapText="true" styleClass="body-text"/>
-            <Button fx:id="btnDosNiveles" text="Cargar Dos Niveles" maxWidth="Infinity" styleClass="button-primary"/>
-        </VBox>
 
-        <!-- 7. Garantizada -->
-        <VBox GridPane.columnIndex="0" GridPane.rowIndex="2" spacing="10" styleClass="card, interactive-card">
-            <Label text="Garantizada" styleClass="card-title"/>
-            <Label text="Guaranteed Scheduling" styleClass="muted"/>
-            <Label text="Garantiza un 1/n de la CPU a cada proceso activo." wrapText="true" styleClass="body-text"/>
-            <Button fx:id="btnGarantizada" text="Cargar Garantizada" maxWidth="Infinity" styleClass="button-primary"/>
-        </VBox>
+    <!-- RESULTADOS -->
+    <VBox spacing="9"
+          styleClass="card, compact-card">
 
-    </GridPane>
+        <Label text="RESULTADOS"
+               styleClass="card-title"/>
 
-    <!-- Área dinámica donde se proyectará la explicación/animación de FCFS -->
-    <VBox fx:id="algorithmWorkspace" VBox.vgrow="ALWAYS" spacing="12" styleClass="card">
-        <Label text="Vista del Algoritmo" styleClass="card-title"/>
-        <Label text="Haz un clic en cualquiera de los algoritmos para desplegar su guía teórica e ilustración de funcionamiento." styleClass="muted"/>
+        <HBox spacing="32">
+
+            <HBox spacing="7">
+                <Label text="Espera promedio:"
+                       styleClass="muted"/>
+
+                <Label fx:id="lblAverageWait"
+                       text="--"
+                       styleClass="value"/>
+            </HBox>
+
+            <HBox spacing="7">
+                <Label text="Respuesta promedio:"
+                       styleClass="muted"/>
+
+                <Label fx:id="lblAverageResponse"
+                       text="--"
+                       styleClass="value"/>
+            </HBox>
+
+            <HBox spacing="7">
+                <Label text="Tiempo de ejecución:"
+                       styleClass="muted"/>
+
+                <Label fx:id="lblExecutionTime"
+                       text="--"
+                       styleClass="value"/>
+            </HBox>
+
+        </HBox>
+
     </VBox>
 
 </VBox>
