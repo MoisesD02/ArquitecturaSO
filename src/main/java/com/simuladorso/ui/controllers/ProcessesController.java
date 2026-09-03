@@ -1,6 +1,8 @@
 package com.simuladorso.ui.controllers;
 
 import com.simuladorso.process.Algoritmos.FCFS;
+import com.simuladorso.process.Algoritmos.PlanDosNiveles;
+import com.simuladorso.process.Algoritmos.PlanGarantizada;
 import com.simuladorso.process.EstadoProceso;
 import com.simuladorso.process.Proceso;
 
@@ -31,6 +33,7 @@ import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
 import java.util.Comparator;
+import java.util.List;
 
 
 public class ProcessesController {
@@ -82,6 +85,14 @@ public class ProcessesController {
 
 
     private FCFS.Resultado resultadoFCFS;
+
+
+    private final PlanDosNiveles planDosNiveles =
+            new PlanDosNiveles();
+
+
+    private final PlanGarantizada planGarantizada =
+            new PlanGarantizada();
 
 
     private int tiempoSimulacion = 0;
@@ -700,31 +711,30 @@ public class ProcessesController {
                 cmbAlgorithm.getValue();
 
 
-        /*
-         * Por ahora nuestro ejemplo funcional
-         * está preparado para FCFS.
-         */
         if (FCFS_NOMBRE.equals(algoritmo)) {
 
+            agregarEjemplo("P1", 0, 5);
+            agregarEjemplo("P2", 1, 3);
+            agregarEjemplo("P3", 2, 4);
 
-            agregarEjemplo(
-                    "P1",
-                    0,
-                    5
-            );
+        } else if (GARANTIZADA.equals(algoritmo)) {
 
+            agregarEjemplo("Render", 0, 5);
+            agregarEjemplo("Audio", 0, 3);
+            agregarEjemplo("Red", 0, 4);
 
-            agregarEjemplo(
-                    "P2",
-                    1,
-                    3
-            );
+        } else if (DOS_NIVELES.equals(algoritmo)) {
 
+            agregarEjemplo("Editor", 0, 3, 320);
+            agregarEjemplo("Compilador", 1, 5, 520);
+            agregarEjemplo("Navegador", 2, 4, 460);
+            agregarEjemplo("BaseDatos", 3, 6, 700);
+            agregarEjemplo("Backup", 4, 2, 300);
 
-            agregarEjemplo(
-                    "P3",
-                    2,
-                    4
+        } else {
+
+            mostrarError(
+                    "Este algoritmo todavia no tiene ejemplo cargado."
             );
         }
 
@@ -734,11 +744,25 @@ public class ProcessesController {
         actualizarControles();
     }
 
-
     private void agregarEjemplo(
             String nombre,
             int llegada,
             int rafaga) {
+
+        agregarEjemplo(
+                nombre,
+                llegada,
+                rafaga,
+                0
+        );
+    }
+
+
+    private void agregarEjemplo(
+            String nombre,
+            int llegada,
+            int rafaga,
+            int memoria) {
 
 
         Proceso proceso =
@@ -750,7 +774,13 @@ public class ProcessesController {
 
                         llegada,
 
-                        rafaga
+                        rafaga,
+
+                        memoria,
+
+                        0,
+
+                        ""
                 );
 
 
@@ -773,24 +803,12 @@ public class ProcessesController {
         );
     }
 
-
     // ==============================================
     // EJECUTAR
     // ==============================================
 
     @FXML
     private void handleExecute() {
-
-
-        if (!FCFS_NOMBRE.equals(
-                cmbAlgorithm.getValue())) {
-
-            mostrarError(
-                    "Este algoritmo todavía no está implementado."
-            );
-
-            return;
-        }
 
 
         if (procesos.isEmpty()) {
@@ -803,11 +821,38 @@ public class ProcessesController {
         }
 
 
+        String algoritmo =
+                cmbAlgorithm.getValue();
+
+
+        if (FCFS_NOMBRE.equals(algoritmo)) {
+
+            ejecutarFCFSAnimado();
+
+        } else if (DOS_NIVELES.equals(algoritmo)) {
+
+            ejecutarDosNiveles();
+
+        } else if (GARANTIZADA.equals(algoritmo)) {
+
+            ejecutarGarantizada();
+
+        } else {
+
+            mostrarError(
+                    "Este algoritmo todavia no esta implementado."
+            );
+        }
+    }
+
+
+    private void ejecutarFCFSAnimado() {
+
         prepararFCFS();
 
 
         /*
-         * Evitamos crear más de una animación.
+         * Evitamos crear mas de una animacion.
          */
         if (timeline != null) {
 
@@ -854,24 +899,12 @@ public class ProcessesController {
         timeline.play();
     }
 
-
     // ==============================================
     // PASO A PASO
     // ==============================================
 
     @FXML
     private void handleStep() {
-
-
-        if (!FCFS_NOMBRE.equals(
-                cmbAlgorithm.getValue())) {
-
-            mostrarError(
-                    "Este algoritmo todavía no está implementado."
-            );
-
-            return;
-        }
 
 
         if (procesos.isEmpty()) {
@@ -884,27 +917,47 @@ public class ProcessesController {
         }
 
 
-        prepararFCFS();
+        String algoritmo =
+                cmbAlgorithm.getValue();
 
 
-        if (tiempoSimulacion
-                < resultadoFCFS
-                .getTiempoTotal()) {
+        if (FCFS_NOMBRE.equals(algoritmo)) {
+
+            prepararFCFS();
 
 
-            avanzarUnPasoFCFS();
-        }
+            if (tiempoSimulacion
+                    < resultadoFCFS
+                    .getTiempoTotal()) {
 
 
-        if (tiempoSimulacion
-                >= resultadoFCFS
-                .getTiempoTotal()) {
+                avanzarUnPasoFCFS();
+            }
 
 
-            finalizarFCFS();
+            if (tiempoSimulacion
+                    >= resultadoFCFS
+                    .getTiempoTotal()) {
+
+
+                finalizarFCFS();
+            }
+
+        } else if (DOS_NIVELES.equals(algoritmo)) {
+
+            ejecutarDosNiveles();
+
+        } else if (GARANTIZADA.equals(algoritmo)) {
+
+            ejecutarGarantizada();
+
+        } else {
+
+            mostrarError(
+                    "Este algoritmo todavia no esta implementado."
+            );
         }
     }
-
 
     // ==============================================
     // PREPARAR FCFS
@@ -1423,6 +1476,404 @@ public class ProcessesController {
 
 
     // ==============================================
+    // DOS NIVELES Y GARANTIZADA
+    // ==============================================
+
+    private void ejecutarDosNiveles() {
+
+        if (procesos.stream()
+                .anyMatch(proceso -> proceso.getMemoriaMB() <= 0)) {
+
+            mostrarError(
+                    "Todos los procesos deben tener memoria mayor que 0 MB."
+            );
+
+            return;
+        }
+
+
+        PlanDosNiveles.Resultado resultado =
+                planDosNiveles.simular(
+                        1200,
+                        procesos.stream()
+                                .sorted(
+                                        Comparator
+                                                .comparingInt(Proceso::getTiempoLlegada)
+                                                .thenComparingInt(Proceso::getPid)
+                                )
+                                .map(proceso ->
+                                        new PlanDosNiveles.ProcesoPlanificado(
+                                                proceso.getPid(),
+                                                proceso.getNombre(),
+                                                proceso.getMemoriaMB(),
+                                                proceso.getRafagaCPU()
+                                        )
+                                )
+                                .toList()
+                );
+
+
+        ganttContainer.getChildren().clear();
+
+        int tiempo = 0;
+
+        double sumaEspera = 0;
+
+        double sumaRespuesta = 0;
+
+        for (PlanDosNiveles.ProcesoPlanificado planificado :
+                resultado.ordenEjecucion()) {
+
+            Proceso proceso =
+                    buscarProcesoPorPid(
+                            planificado.pid()
+                    );
+
+            if (proceso == null) {
+
+                continue;
+            }
+
+
+            int inicio =
+                    Math.max(
+                            tiempo,
+                            proceso.getTiempoLlegada()
+                    );
+
+            int fin =
+                    inicio
+                            + proceso.getRafagaCPU();
+
+
+            proceso.setTiempoInicio(
+                    inicio
+            );
+
+            proceso.setTiempoFinalizacion(
+                    fin
+            );
+
+            proceso.setTiempoEspera(
+                    inicio
+                            - proceso.getTiempoLlegada()
+            );
+
+            proceso.setTiempoRespuesta(
+                    proceso.getTiempoEspera()
+            );
+
+            proceso.setTiempoRestante(
+                    0
+            );
+
+            proceso.setEstado(
+                    EstadoProceso.TERMINADO
+            );
+
+
+            agregarBloqueGantt(
+                    "P" + String.format("%03d", proceso.getPid()),
+                    inicio,
+                    fin,
+                    "#2563eb"
+            );
+
+
+            sumaEspera += proceso.getTiempoEspera();
+
+            sumaRespuesta += proceso.getTiempoRespuesta();
+
+            tiempo = fin;
+        }
+
+
+        finalizarSimulacionGenerica(
+                tiempo,
+                sumaEspera,
+                sumaRespuesta,
+                "Dos niveles: memoria principal 1200 MB, con espera en memoria secundaria."
+        );
+    }
+
+
+    private void ejecutarGarantizada() {
+
+        PlanGarantizada.Resultado resultado =
+                planGarantizada.simular(
+                        procesos.stream()
+                                .sorted(
+                                        Comparator
+                                                .comparingInt(Proceso::getTiempoLlegada)
+                                                .thenComparingInt(Proceso::getPid)
+                                )
+                                .map(proceso ->
+                                        new PlanGarantizada.ProcesoGarantizado(
+                                                proceso.getPid(),
+                                                proceso.getNombre(),
+                                                proceso.getRafagaCPU()
+                                        )
+                                )
+                                .toList()
+                );
+
+
+        ganttContainer.getChildren().clear();
+
+        for (PlanGarantizada.Paso paso :
+                resultado.pasos()) {
+
+            agregarBloqueGantt(
+                    "P" + String.format("%03d", paso.proceso().pid()),
+                    paso.inicio(),
+                    paso.fin(),
+                    colorPorProceso(
+                            paso.proceso().pid()
+                    )
+            );
+        }
+
+
+        double sumaEspera = 0;
+
+        double sumaRespuesta = 0;
+
+        for (Proceso proceso :
+                procesos) {
+
+            int inicio =
+                    resultado.pasos()
+                            .stream()
+                            .filter(paso -> paso.proceso().pid() == proceso.getPid())
+                            .mapToInt(PlanGarantizada.Paso::inicio)
+                            .min()
+                            .orElse(0);
+
+            int fin =
+                    resultado.pasos()
+                            .stream()
+                            .filter(paso -> paso.proceso().pid() == proceso.getPid())
+                            .mapToInt(PlanGarantizada.Paso::fin)
+                            .max()
+                            .orElse(0);
+
+            int espera =
+                    Math.max(
+                            0,
+                            fin
+                                    - proceso.getTiempoLlegada()
+                                    - proceso.getRafagaCPU()
+                    );
+
+            int respuesta =
+                    Math.max(
+                            0,
+                            inicio
+                                    - proceso.getTiempoLlegada()
+                    );
+
+
+            proceso.setTiempoInicio(
+                    inicio
+            );
+
+            proceso.setTiempoFinalizacion(
+                    fin
+            );
+
+            proceso.setTiempoEspera(
+                    espera
+            );
+
+            proceso.setTiempoRespuesta(
+                    respuesta
+            );
+
+            proceso.setTiempoCPURecibido(
+                    proceso.getRafagaCPU()
+            );
+
+            proceso.setTiempoRestante(
+                    0
+            );
+
+            proceso.setEstado(
+                    EstadoProceso.TERMINADO
+            );
+
+
+            sumaEspera += espera;
+
+            sumaRespuesta += respuesta;
+        }
+
+
+        finalizarSimulacionGenerica(
+                resultado.tiempoTotal(),
+                sumaEspera,
+                sumaRespuesta,
+                "Garantizada: cada proceso activo recibe una cuota cercana a 1/n de CPU."
+        );
+    }
+
+
+    private void finalizarSimulacionGenerica(
+            int tiempoTotal,
+            double sumaEspera,
+            double sumaRespuesta,
+            String mensaje) {
+
+        tiempoSimulacion =
+                tiempoTotal;
+
+        simulacionIniciada =
+                true;
+
+
+        lblSimulationTime.setText(
+                String.valueOf(
+                        tiempoTotal
+                )
+        );
+
+        lblCpuState.setText(
+                "FINALIZADA"
+        );
+
+        lblCurrentProcess.setText(
+                "---"
+        );
+
+        lblRemainingTime.setText(
+                "0"
+        );
+
+        cpuProgress.setProgress(
+                1
+        );
+
+        lblAverageWait.setText(
+                String.format(
+                        "%.2f",
+                        sumaEspera / procesos.size()
+                )
+        );
+
+        lblAverageResponse.setText(
+                String.format(
+                        "%.2f",
+                        sumaRespuesta / procesos.size()
+                )
+        );
+
+        lblExecutionTime.setText(
+                tiempoTotal
+                        + " u.t."
+        );
+
+        lblFormMessage.setText(
+                mensaje
+        );
+
+        actualizarColaListos();
+
+        tblProcesses.refresh();
+
+        btnExecute.setDisable(
+                true
+        );
+
+        btnStep.setDisable(
+                true
+        );
+    }
+
+
+    private Proceso buscarProcesoPorPid(
+            int pid) {
+
+        return procesos.stream()
+                .filter(proceso -> proceso.getPid() == pid)
+                .findFirst()
+                .orElse(null);
+    }
+
+
+    private void agregarBloqueGantt(
+            String nombreProceso,
+            int inicio,
+            int fin,
+            String color) {
+
+        VBox bloque =
+                new VBox(3);
+
+        bloque.setMinWidth(
+                Math.max(
+                        46,
+                        (fin - inicio) * 35
+                )
+        );
+
+        bloque.setAlignment(
+                javafx.geometry.Pos.CENTER
+        );
+
+        bloque.setStyle(
+                "-fx-background-color: " + color + ";"
+                        + "-fx-border-color: white;"
+                        + "-fx-padding: 8;"
+        );
+
+
+        Label nombre =
+                new Label(
+                        nombreProceso
+                );
+
+        nombre.setStyle(
+                "-fx-text-fill: white;"
+                        + "-fx-font-weight: bold;"
+        );
+
+
+        Label tiempos =
+                new Label(
+                        inicio
+                                + " - "
+                                + fin
+                );
+
+        tiempos.setStyle(
+                "-fx-text-fill: white;"
+        );
+
+
+        bloque.getChildren()
+                .addAll(
+                        nombre,
+                        tiempos
+                );
+
+        ganttContainer.getChildren()
+                .add(
+                        bloque
+                );
+    }
+
+
+    private String colorPorProceso(
+            int pid) {
+
+        return switch ((pid - 1) % 4) {
+            case 0 -> "#2563eb";
+            case 1 -> "#25a46d";
+            case 2 -> "#ea5564";
+            default -> "#60728f";
+        };
+    }
+
+    // ==============================================
     // FINALIZAR
     // ==============================================
 
@@ -1586,11 +2037,19 @@ public class ProcessesController {
     private void actualizarControles() {
 
 
+        String algoritmo =
+                cmbAlgorithm.getValue();
+
+
+        boolean algoritmoImplementado =
+                FCFS_NOMBRE.equals(algoritmo)
+                        || GARANTIZADA.equals(algoritmo)
+                        || DOS_NIVELES.equals(algoritmo);
+
+
         boolean puedeEjecutar =
                 !procesos.isEmpty()
-                        && FCFS_NOMBRE.equals(
-                        cmbAlgorithm.getValue()
-                );
+                        && algoritmoImplementado;
 
 
         btnExecute.setDisable(
@@ -1602,7 +2061,6 @@ public class ProcessesController {
                 !puedeEjecutar
         );
     }
-
 
     // ==============================================
     // ORDEN TABLA
