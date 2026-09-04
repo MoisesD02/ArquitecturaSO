@@ -6,6 +6,9 @@ import com.simuladorso.process.Algoritmos.PlanGarantizada;
 import com.simuladorso.process.Algoritmos.SJF;
 import com.simuladorso.process.EstadoProceso;
 import com.simuladorso.process.Proceso;
+import com.simuladorso.process.Algoritmos.PorPrioridad;
+import com.simuladorso.process.Algoritmos.PorColasM;
+import com.simuladorso.process.Algoritmos.RoundRobin;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -99,8 +102,6 @@ public class ProcessesController {
 
 
     private SJF.Resultado resultadoSJF;
-
-
     private final PlanDosNiveles planDosNiveles =
             new PlanDosNiveles();
 
@@ -109,8 +110,37 @@ public class ProcessesController {
             new PlanGarantizada();
 
 
-    private int tiempoSimulacion = 0;
+    // ==============================================
+    // PRIORIDAD
+    // ==============================================
 
+    private final PorPrioridad porPrioridad =
+            new PorPrioridad();
+
+    private PorPrioridad.Resultado resultadoPrioridad;
+
+
+    // ==============================================
+    // COLAS MÚLTIPLES
+    // ==============================================
+
+    private final PorColasM porColasM =
+            new PorColasM();
+
+    private PorColasM.Resultado resultadoColas;
+
+
+    // ==============================================
+    // ROUND ROBIN
+    // ==============================================
+
+    private final RoundRobin roundRobin =
+            new RoundRobin();
+
+    private RoundRobin.Resultado resultadoRoundRobin;
+
+
+    private int tiempoSimulacion = 0;
 
     private Timeline timeline;
 
@@ -408,7 +438,7 @@ public class ProcessesController {
     private void configurarTabla() {
 
         tblProcesses.setColumnResizePolicy(
-                TableView.CONSTRAINED_RESIZE_POLICY
+                TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN
         );
 
 
@@ -920,6 +950,9 @@ public class ProcessesController {
 
         if (!FCFS_NOMBRE.equals(algoritmo)
                 && !SJF.equals(algoritmo)
+                && !PRIORIDAD.equals(algoritmo)
+                && !COLAS_MULTIPLES.equals(algoritmo)
+                && !ROUND_ROBIN.equals(algoritmo)
                 && !GARANTIZADA.equals(algoritmo)
                 && !DOS_NIVELES.equals(algoritmo)) {
 
@@ -1022,6 +1055,9 @@ public class ProcessesController {
 
         if (!FCFS_NOMBRE.equals(algoritmo)
                 && !SJF.equals(algoritmo)
+                && !PRIORIDAD.equals(algoritmo)
+                && !COLAS_MULTIPLES.equals(algoritmo)
+                && !ROUND_ROBIN.equals(algoritmo)
                 && !GARANTIZADA.equals(algoritmo)
                 && !DOS_NIVELES.equals(algoritmo)) {
 
@@ -1130,33 +1166,82 @@ public class ProcessesController {
         /*
          * Ejecutamos el algoritmo seleccionado.
          */
-        if (FCFS_NOMBRE.equals(algoritmo)) {
+        switch (algoritmo) {
+            case FCFS_NOMBRE -> {
 
-            resultadoFCFS =
-                    fcfs.planificar(
-                            procesosSimulacionActual
-                    );
+                resultadoFCFS =
+                        fcfs.planificar(
+                                procesosSimulacionActual
+                        );
 
-            resultadoSJF = null;
+                resultadoSJF = null;
+                resultadoColas = null;
+                resultadoPrioridad = null;
+                resultadoRoundRobin = null;
+            }
+            case SJF -> {
 
+                resultadoSJF =
+                        sjf.planificar(
+                                procesosSimulacionActual
+                        );
 
-        } else if (SJF.equals(algoritmo)) {
+                resultadoFCFS = null;
+                resultadoColas = null;
+                resultadoPrioridad = null;
+                resultadoRoundRobin = null;
+            }
+            case PRIORIDAD -> {
 
-            resultadoSJF =
-                    sjf.planificar(
-                            procesosSimulacionActual
-                    );
+                resultadoPrioridad =
+                        porPrioridad.planificar(
+                                procesosSimulacionActual
+                        );
 
-            resultadoFCFS = null;
+                resultadoFCFS = null;
+                resultadoSJF = null;
+                resultadoColas = null;
+                resultadoRoundRobin = null;
+            }
+            case COLAS_MULTIPLES -> {
 
+                resultadoColas =
+                        porColasM.planificar(
+                                procesosSimulacionActual
+                        );
 
-        } else {
+                resultadoFCFS = null;
+                resultadoSJF = null;
+                resultadoPrioridad = null;
+                resultadoRoundRobin = null;
+            }
+            case ROUND_ROBIN -> {
 
-            mostrarError(
-                    "Este algoritmo todavía no está implementado."
-            );
+                int quantum =
+                        leerEnteroPositivo(
+                                txtQuantum,
+                                "quantum"
+                        );
 
-            return;
+                resultadoRoundRobin =
+                        roundRobin.planificar(
+                                procesosSimulacionActual,
+                                quantum
+                        );
+
+                resultadoFCFS = null;
+                resultadoSJF = null;
+                resultadoPrioridad = null;
+                resultadoColas = null;
+            }
+            case null, default -> {
+
+                mostrarError(
+                        "Este algoritmo todavía no está implementado."
+                );
+
+                return;
+            }
         }
 
 
@@ -1217,7 +1302,32 @@ public class ProcessesController {
 
     private void actualizarEstadosPlanificacion() {
 
+        String algoritmo =
+                cmbAlgorithm.getValue();
 
+
+        /*
+         * Round Robin necesita una lógica diferente,
+         * porque un mismo proceso puede entrar
+         * varias veces a la CPU.
+         */
+        if (ROUND_ROBIN.equals(algoritmo)) {
+
+            actualizarEstadosRoundRobin();
+
+            return;
+        }
+
+
+        /*
+         * Lógica utilizada por los algoritmos
+         * no apropiativos:
+         *
+         * FCFS
+         * SJF
+         * Prioridad
+         * Colas múltiples
+         */
         for (Proceso proceso : procesos) {
 
 
@@ -1306,6 +1416,201 @@ public class ProcessesController {
     }
 
 
+    private void actualizarEstadosRoundRobin() {
+
+        if (resultadoRoundRobin == null) {
+            return;
+        }
+
+
+        /*
+         * Primero reconstruimos el estado de
+         * todos los procesos según el tiempo
+         * actual de la simulación.
+         */
+        for (Proceso proceso : procesos) {
+
+
+            /*
+             * Todavía no ha llegado.
+             */
+            if (tiempoSimulacion
+                    < proceso.getTiempoLlegada()) {
+
+                proceso.setEstado(
+                        EstadoProceso.NUEVO
+                );
+
+                proceso.setTiempoRestante(
+                        proceso.getRafagaCPU()
+                );
+
+                continue;
+            }
+
+
+            /*
+             * Si su tiempo de finalización ya pasó,
+             * entonces terminó.
+             */
+            if (proceso.getTiempoFinalizacion() != -1
+                    && proceso.getTiempoFinalizacion()
+                    <= tiempoSimulacion) {
+
+                proceso.setEstado(
+                        EstadoProceso.TERMINADO
+                );
+
+                proceso.setTiempoRestante(
+                        0
+                );
+
+                continue;
+            }
+
+
+            /*
+             * Si ya llegó y todavía no terminó,
+             * inicialmente lo consideramos LISTO.
+             */
+            proceso.setEstado(
+                    EstadoProceso.LISTO
+            );
+
+
+            /*
+             * Calculamos cuánto CPU ha consumido
+             * hasta el instante actual.
+             */
+            int ejecutado =
+                    calcularTiempoEjecutadoRoundRobin(
+                            proceso,
+                            tiempoSimulacion
+                    );
+
+
+            int restante =
+                    proceso.getRafagaCPU()
+                            - ejecutado;
+
+
+            proceso.setTiempoRestante(
+                    Math.max(
+                            0,
+                            restante
+                    )
+            );
+        }
+
+
+        /*
+         * Ahora buscamos qué segmento está
+         * utilizando la CPU en este instante.
+         */
+        RoundRobin.Segmento segmentoActual =
+                obtenerSegmentoActualRoundRobin();
+
+
+        if (segmentoActual != null
+                && !segmentoActual.esCPUOciosa()) {
+
+            Proceso procesoActual =
+                    segmentoActual.getProceso();
+
+
+            procesoActual.setEstado(
+                    EstadoProceso.EJECUCION
+            );
+        }
+    }
+
+    private RoundRobin.Segmento obtenerSegmentoActualRoundRobin() {
+
+        if (resultadoRoundRobin == null) {
+            return null;
+        }
+
+
+        for (RoundRobin.Segmento segmento :
+                resultadoRoundRobin.getSegmentos()) {
+
+
+            if (segmento.getInicio()
+                    <= tiempoSimulacion
+                    && tiempoSimulacion
+                    < segmento.getFin()) {
+
+                return segmento;
+            }
+        }
+
+
+        return null;
+    }
+
+    private int calcularTiempoEjecutadoRoundRobin(
+            Proceso proceso,
+            int tiempoActual) {
+
+        if (resultadoRoundRobin == null) {
+            return 0;
+        }
+
+
+        int ejecutado = 0;
+
+
+        for (RoundRobin.Segmento segmento :
+                resultadoRoundRobin.getSegmentos()) {
+
+
+            if (segmento.esCPUOciosa()) {
+                continue;
+            }
+
+
+            if (segmento.getProceso()
+                    != proceso) {
+
+                continue;
+            }
+
+
+            /*
+             * Este segmento todavía no comenzó.
+             */
+            if (tiempoActual
+                    <= segmento.getInicio()) {
+
+                continue;
+            }
+
+
+            /*
+             * El segmento ya terminó completamente.
+             */
+            if (tiempoActual
+                    >= segmento.getFin()) {
+
+                ejecutado +=
+                        segmento.getFin()
+                                - segmento.getInicio();
+
+            } else {
+
+                /*
+                 * Estamos a mitad de este segmento.
+                 */
+                ejecutado +=
+                        tiempoActual
+                                - segmento.getInicio();
+            }
+        }
+
+
+        return ejecutado;
+    }
+
 
     private int obtenerTiempoTotal() {
 
@@ -1325,6 +1630,27 @@ public class ProcessesController {
                 && resultadoSJF != null) {
 
             return resultadoSJF
+                    .getTiempoTotal();
+        }
+
+        if (PRIORIDAD.equals(algoritmo)
+                && resultadoPrioridad != null) {
+
+            return resultadoPrioridad
+                    .getTiempoTotal();
+        }
+
+        if (COLAS_MULTIPLES.equals(algoritmo)
+                && resultadoColas != null) {
+
+            return resultadoColas
+                    .getTiempoTotal();
+        }
+
+        if (ROUND_ROBIN.equals(algoritmo)
+                && resultadoRoundRobin != null) {
+
+            return resultadoRoundRobin
                     .getTiempoTotal();
         }
 
@@ -1356,6 +1682,28 @@ public class ProcessesController {
         }
 
 
+        if (PRIORIDAD.equals(algoritmo)
+                && resultadoPrioridad != null) {
+
+            return resultadoPrioridad
+                    .getEsperaPromedio();
+        }
+
+
+        if (COLAS_MULTIPLES.equals(algoritmo)
+                && resultadoColas != null) {
+
+            return resultadoColas
+                    .getEsperaPromedio();
+        }
+
+        if (ROUND_ROBIN.equals(algoritmo)
+                && resultadoRoundRobin != null) {
+
+            return resultadoRoundRobin
+                    .getEsperaPromedio();
+        }
+
         return 0;
     }
 
@@ -1381,6 +1729,29 @@ public class ProcessesController {
                     .getRespuestaPromedio();
         }
 
+
+        if (PRIORIDAD.equals(algoritmo)
+                && resultadoPrioridad != null) {
+
+            return resultadoPrioridad
+                    .getRespuestaPromedio();
+        }
+
+
+        if (COLAS_MULTIPLES.equals(algoritmo)
+                && resultadoColas != null) {
+
+            return resultadoColas
+                    .getRespuestaPromedio();
+        }
+
+
+        if (ROUND_ROBIN.equals(algoritmo)
+                && resultadoRoundRobin != null) {
+
+            return resultadoRoundRobin
+                    .getRespuestaPromedio();
+        }
 
         return 0;
     }
@@ -1624,9 +1995,104 @@ public class ProcessesController {
         } else if (SJF.equals(algoritmo)) {
 
             actualizarGanttSJF();
+        }else if (PRIORIDAD.equals(algoritmo)) {
+
+            actualizarGanttPrioridad();
+        } else if (COLAS_MULTIPLES.equals(algoritmo)) {
+
+            actualizarGanttColas();
+        } else if (ROUND_ROBIN.equals(algoritmo)) {
+
+            actualizarGanttRoundRobin();
         }
     }
 
+    private void actualizarGanttRoundRobin() {
+
+        if (resultadoRoundRobin == null) {
+            return;
+        }
+
+        for (RoundRobin.Segmento segmento :
+                resultadoRoundRobin.getSegmentos()) {
+
+            if (segmento.getInicio()
+                    > tiempoSimulacion) {
+
+                continue;
+            }
+
+            agregarBloqueGantt(
+
+                    segmento.getProceso(),
+
+                    segmento.getInicio(),
+
+                    segmento.getFin(),
+
+                    segmento.esCPUOciosa()
+            );
+        }
+    }
+
+    private void actualizarGanttColas() {
+
+        if (resultadoColas == null) {
+            return;
+        }
+
+        for (PorColasM.Segmento segmento :
+                resultadoColas.getSegmentos()) {
+
+            if (segmento.getInicio()
+                    > tiempoSimulacion) {
+
+                continue;
+            }
+
+            agregarBloqueGantt(
+
+                    segmento.getProceso(),
+
+                    segmento.getInicio(),
+
+                    segmento.getFin(),
+
+                    segmento.esCPUOciosa()
+            );
+        }
+    }
+
+    private void actualizarGanttPrioridad() {
+
+        if (resultadoPrioridad == null) {
+            return;
+        }
+
+
+        for (PorPrioridad.Segmento segmento :
+                resultadoPrioridad.getSegmentos()) {
+
+
+            if (segmento.getInicio()
+                    > tiempoSimulacion) {
+
+                continue;
+            }
+
+
+            agregarBloqueGantt(
+
+                    segmento.getProceso(),
+
+                    segmento.getInicio(),
+
+                    segmento.getFin(),
+
+                    segmento.esCPUOciosa()
+            );
+        }
+    }
 
 
     private void actualizarGanttFCFS() {
@@ -2289,6 +2755,9 @@ public class ProcessesController {
 
         resultadoFCFS = null;
         resultadoSJF = null;
+        resultadoPrioridad = null;
+        resultadoColas = null;
+        resultadoRoundRobin = null;
 
         tiempoSimulacion = 0;
 
@@ -2384,9 +2853,11 @@ public class ProcessesController {
         boolean algoritmoImplementado =
                 FCFS_NOMBRE.equals(algoritmo)
                         || SJF.equals(algoritmo)
+                        || PRIORIDAD.equals(algoritmo)
+                        || COLAS_MULTIPLES.equals(algoritmo)
+                        || ROUND_ROBIN.equals(algoritmo)
                         || GARANTIZADA.equals(algoritmo)
                         || DOS_NIVELES.equals(algoritmo);
-
 
         boolean puedeEjecutar =
                 hayProcesosPendientes
@@ -2558,3 +3029,4 @@ public class ProcessesController {
                 );
     }
 }
+
