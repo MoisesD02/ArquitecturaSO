@@ -36,7 +36,6 @@
         <ComboBox fx:id="cmbAlgorithm"
                   prefWidth="270"/>
 
-        <Region HBox.hgrow="ALWAYS"/>
 
         <!-- Solo aparecerá en Round Robin -->
         <HBox fx:id="quantumContainer"
@@ -51,7 +50,6 @@
             <TextField fx:id="txtQuantum"
                        promptText="2"
                        prefWidth="75"/>
-
         </HBox>
 
     </HBox>
