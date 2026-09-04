@@ -1,6 +1,8 @@
 package com.simuladorso.ui.controllers;
 
 import com.simuladorso.process.Algoritmos.FCFS;
+import com.simuladorso.process.Algoritmos.PlanDosNiveles;
+import com.simuladorso.process.Algoritmos.PlanGarantizada;
 import com.simuladorso.process.Algoritmos.SJF;
 import com.simuladorso.process.EstadoProceso;
 import com.simuladorso.process.Proceso;
@@ -97,6 +99,16 @@ public class ProcessesController {
 
 
     private SJF.Resultado resultadoSJF;
+
+
+    private final PlanDosNiveles planDosNiveles =
+            new PlanDosNiveles();
+
+
+    private final PlanGarantizada planGarantizada =
+            new PlanGarantizada();
+
+
     private int tiempoSimulacion = 0;
 
 
@@ -761,6 +773,68 @@ public class ProcessesController {
             );
         }
 
+        if (GARANTIZADA.equals(algoritmo)) {
+
+            agregarProcesoEjemplo(
+                    "Render",
+                    0,
+                    5,
+                    0
+            );
+
+            agregarProcesoEjemplo(
+                    "Audio",
+                    0,
+                    3,
+                    0
+            );
+
+            agregarProcesoEjemplo(
+                    "Red",
+                    0,
+                    4,
+                    0
+            );
+        }
+
+        if (DOS_NIVELES.equals(algoritmo)) {
+
+            agregarProcesoEjemplo(
+                    "Editor",
+                    0,
+                    3,
+                    320
+            );
+
+            agregarProcesoEjemplo(
+                    "Compilador",
+                    1,
+                    5,
+                    520
+            );
+
+            agregarProcesoEjemplo(
+                    "Navegador",
+                    2,
+                    4,
+                    460
+            );
+
+            agregarProcesoEjemplo(
+                    "BaseDatos",
+                    3,
+                    6,
+                    700
+            );
+
+            agregarProcesoEjemplo(
+                    "Backup",
+                    4,
+                    2,
+                    300
+            );
+        }
+
 
         ordenarTablaPorLlegada();
 
@@ -776,6 +850,21 @@ public class ProcessesController {
             int llegada,
             int rafaga) {
 
+        agregarProcesoEjemplo(
+                "Proceso " + siguientePid,
+                llegada,
+                rafaga,
+                0
+        );
+    }
+
+
+    private void agregarProcesoEjemplo(
+            String nombre,
+            int llegada,
+            int rafaga,
+            int memoria) {
+
         int pid =
                 siguientePid++;
 
@@ -785,11 +874,17 @@ public class ProcessesController {
 
                         pid,
 
-                        "Proceso " + pid,
+                        nombre,
 
                         llegada,
 
-                        rafaga
+                        rafaga,
+
+                        memoria,
+
+                        0,
+
+                        ""
                 );
 
 
@@ -824,7 +919,9 @@ public class ProcessesController {
 
 
         if (!FCFS_NOMBRE.equals(algoritmo)
-                && !SJF.equals(algoritmo)) {
+                && !SJF.equals(algoritmo)
+                && !GARANTIZADA.equals(algoritmo)
+                && !DOS_NIVELES.equals(algoritmo)) {
 
             mostrarError(
                     "Este algoritmo todavía no está implementado."
@@ -839,6 +936,22 @@ public class ProcessesController {
             mostrarError(
                     "Agregue al menos un proceso pendiente."
             );
+
+            return;
+        }
+
+
+        if (DOS_NIVELES.equals(algoritmo)) {
+
+            ejecutarDosNiveles();
+
+            return;
+        }
+
+
+        if (GARANTIZADA.equals(algoritmo)) {
+
+            ejecutarGarantizada();
 
             return;
         }
@@ -908,7 +1021,9 @@ public class ProcessesController {
 
 
         if (!FCFS_NOMBRE.equals(algoritmo)
-                && !SJF.equals(algoritmo)) {
+                && !SJF.equals(algoritmo)
+                && !GARANTIZADA.equals(algoritmo)
+                && !DOS_NIVELES.equals(algoritmo)) {
 
             mostrarError(
                     "Este algoritmo todavía no está implementado."
@@ -923,6 +1038,22 @@ public class ProcessesController {
             mostrarError(
                     "Agregue al menos un proceso pendiente."
             );
+
+            return;
+        }
+
+
+        if (DOS_NIVELES.equals(algoritmo)) {
+
+            ejecutarDosNiveles();
+
+            return;
+        }
+
+
+        if (GARANTIZADA.equals(algoritmo)) {
+
+            ejecutarGarantizada();
 
             return;
         }
@@ -1664,6 +1795,389 @@ public class ProcessesController {
     }
 
 
+    // ==============================================
+    // DOS NIVELES Y GARANTIZADA
+    // ==============================================
+
+    private void ejecutarDosNiveles() {
+
+        procesosSimulacionActual.clear();
+
+
+        for (Proceso proceso : procesos) {
+
+            if (proceso.getEstado()
+                    != EstadoProceso.TERMINADO) {
+
+                proceso.reiniciarSimulacion();
+
+                procesosSimulacionActual.add(
+                        proceso
+                );
+            }
+        }
+
+
+        if (procesosSimulacionActual.stream()
+                .anyMatch(proceso -> proceso.getMemoriaMB() <= 0)) {
+
+            mostrarError(
+                    "Todos los procesos de dos niveles deben tener memoria mayor que 0 MB."
+            );
+
+            return;
+        }
+
+
+        PlanDosNiveles.Resultado resultado =
+                planDosNiveles.simular(
+                        1200,
+                        procesosSimulacionActual.stream()
+                                .sorted(
+                                        Comparator
+                                                .comparingInt(Proceso::getTiempoLlegada)
+                                                .thenComparingInt(Proceso::getPid)
+                                )
+                                .map(proceso ->
+                                        new PlanDosNiveles.ProcesoPlanificado(
+                                                proceso.getPid(),
+                                                proceso.getNombre(),
+                                                proceso.getMemoriaMB(),
+                                                proceso.getRafagaCPU()
+                                        )
+                                )
+                                .toList()
+                );
+
+
+        ganttContainer
+                .getChildren()
+                .clear();
+
+
+        int tiempoActual = 0;
+
+        double sumaEspera = 0;
+
+        double sumaRespuesta = 0;
+
+
+        for (PlanDosNiveles.ProcesoPlanificado planificado :
+                resultado.ordenEjecucion()) {
+
+            Proceso proceso =
+                    buscarProcesoPorPid(
+                            planificado.pid()
+                    );
+
+
+            if (proceso == null) {
+
+                continue;
+            }
+
+
+            if (tiempoActual
+                    < proceso.getTiempoLlegada()) {
+
+                agregarBloqueGantt(
+                        null,
+                        tiempoActual,
+                        proceso.getTiempoLlegada(),
+                        true
+                );
+
+                tiempoActual =
+                        proceso.getTiempoLlegada();
+            }
+
+
+            int inicio =
+                    tiempoActual;
+
+            int fin =
+                    inicio
+                            + proceso.getRafagaCPU();
+
+
+            proceso.setTiempoInicio(
+                    inicio
+            );
+
+            proceso.setTiempoFinalizacion(
+                    fin
+            );
+
+            proceso.setTiempoEspera(
+                    inicio
+                            - proceso.getTiempoLlegada()
+            );
+
+            proceso.setTiempoRespuesta(
+                    proceso.getTiempoEspera()
+            );
+
+            proceso.setTiempoRestante(
+                    0
+            );
+
+            proceso.setEstado(
+                    EstadoProceso.TERMINADO
+            );
+
+
+            agregarBloqueGantt(
+                    proceso,
+                    inicio,
+                    fin,
+                    false
+            );
+
+
+            sumaEspera += proceso.getTiempoEspera();
+
+            sumaRespuesta += proceso.getTiempoRespuesta();
+
+            tiempoActual =
+                    fin;
+        }
+
+
+        finalizarPlanificacionDirecta(
+                tiempoActual,
+                sumaEspera,
+                sumaRespuesta,
+                "Dos niveles ejecutado: procesos cargados en memoria principal y secundaria."
+        );
+    }
+
+
+    private void ejecutarGarantizada() {
+
+        procesosSimulacionActual.clear();
+
+
+        for (Proceso proceso : procesos) {
+
+            if (proceso.getEstado()
+                    != EstadoProceso.TERMINADO) {
+
+                proceso.reiniciarSimulacion();
+
+                procesosSimulacionActual.add(
+                        proceso
+                );
+            }
+        }
+
+
+        PlanGarantizada.Resultado resultado =
+                planGarantizada.simular(
+                        procesosSimulacionActual.stream()
+                                .sorted(
+                                        Comparator
+                                                .comparingInt(Proceso::getTiempoLlegada)
+                                                .thenComparingInt(Proceso::getPid)
+                                )
+                                .map(proceso ->
+                                        new PlanGarantizada.ProcesoGarantizado(
+                                                proceso.getPid(),
+                                                proceso.getNombre(),
+                                                proceso.getRafagaCPU()
+                                        )
+                                )
+                                .toList()
+                );
+
+
+        ganttContainer
+                .getChildren()
+                .clear();
+
+
+        for (PlanGarantizada.Paso paso :
+                resultado.pasos()) {
+
+            Proceso proceso =
+                    buscarProcesoPorPid(
+                            paso.proceso().pid()
+                    );
+
+
+            if (proceso != null) {
+
+                agregarBloqueGantt(
+                        proceso,
+                        paso.inicio(),
+                        paso.fin(),
+                        false
+                );
+            }
+        }
+
+
+        double sumaEspera = 0;
+
+        double sumaRespuesta = 0;
+
+
+        for (Proceso proceso :
+                procesosSimulacionActual) {
+
+            int inicio =
+                    resultado.pasos()
+                            .stream()
+                            .filter(paso -> paso.proceso().pid() == proceso.getPid())
+                            .mapToInt(PlanGarantizada.Paso::inicio)
+                            .min()
+                            .orElse(0);
+
+            int fin =
+                    resultado.pasos()
+                            .stream()
+                            .filter(paso -> paso.proceso().pid() == proceso.getPid())
+                            .mapToInt(PlanGarantizada.Paso::fin)
+                            .max()
+                            .orElse(0);
+
+            int espera =
+                    Math.max(
+                            0,
+                            fin
+                                    - proceso.getTiempoLlegada()
+                                    - proceso.getRafagaCPU()
+                    );
+
+            int respuesta =
+                    Math.max(
+                            0,
+                            inicio
+                                    - proceso.getTiempoLlegada()
+                    );
+
+
+            proceso.setTiempoInicio(
+                    inicio
+            );
+
+            proceso.setTiempoFinalizacion(
+                    fin
+            );
+
+            proceso.setTiempoEspera(
+                    espera
+            );
+
+            proceso.setTiempoRespuesta(
+                    respuesta
+            );
+
+            proceso.setTiempoCPURecibido(
+                    proceso.getRafagaCPU()
+            );
+
+            proceso.setTiempoRestante(
+                    0
+            );
+
+            proceso.setEstado(
+                    EstadoProceso.TERMINADO
+            );
+
+
+            sumaEspera += espera;
+
+            sumaRespuesta += respuesta;
+        }
+
+
+        finalizarPlanificacionDirecta(
+                resultado.tiempoTotal(),
+                sumaEspera,
+                sumaRespuesta,
+                "Garantizada ejecutada: cada proceso activo recibe una cuota aproximada de 1/n de CPU."
+        );
+    }
+
+
+    private void finalizarPlanificacionDirecta(
+            int tiempoTotal,
+            double sumaEspera,
+            double sumaRespuesta,
+            String mensaje) {
+
+        tiempoSimulacion =
+                tiempoTotal;
+
+        simulacionIniciada =
+                false;
+
+
+        lblSimulationTime.setText(
+                String.valueOf(
+                        tiempoTotal
+                )
+        );
+
+        lblCpuState.setText(
+                "FINALIZADA"
+        );
+
+        lblCurrentProcess.setText(
+                "---"
+        );
+
+        lblRemainingTime.setText(
+                "0"
+        );
+
+        cpuProgress.setProgress(
+                1
+        );
+
+        lblAverageWait.setText(
+                String.format(
+                        "%.2f",
+                        sumaEspera / procesosSimulacionActual.size()
+                )
+        );
+
+        lblAverageResponse.setText(
+                String.format(
+                        "%.2f",
+                        sumaRespuesta / procesosSimulacionActual.size()
+                )
+        );
+
+        lblExecutionTime.setText(
+                tiempoTotal
+                        + " u.t."
+        );
+
+        lblFormMessage.setText(
+                mensaje
+        );
+
+        procesosSimulacionActual.clear();
+
+        actualizarColaListos();
+
+        tblProcesses.refresh();
+
+        actualizarControles();
+    }
+
+
+    private Proceso buscarProcesoPorPid(
+            int pid) {
+
+        return procesos.stream()
+                .filter(proceso -> proceso.getPid() == pid)
+                .findFirst()
+                .orElse(null);
+    }
+
+
 
 
 
@@ -1869,7 +2383,9 @@ public class ProcessesController {
 
         boolean algoritmoImplementado =
                 FCFS_NOMBRE.equals(algoritmo)
-                        || SJF.equals(algoritmo);
+                        || SJF.equals(algoritmo)
+                        || GARANTIZADA.equals(algoritmo)
+                        || DOS_NIVELES.equals(algoritmo);
 
 
         boolean puedeEjecutar =
