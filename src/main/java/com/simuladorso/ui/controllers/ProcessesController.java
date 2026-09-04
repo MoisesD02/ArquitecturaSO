@@ -110,6 +110,55 @@ public class ProcessesController {
             new PlanGarantizada();
 
 
+    private PlanDosNiveles.Resultado resultadoDosNiveles;
+
+    private PlanGarantizada.Resultado resultadoGarantizada;
+
+
+    private final List<SegmentoDosNiveles> segmentosDosNiveles =
+            new ArrayList<>();
+
+
+    private static class SegmentoDosNiveles {
+
+        private final Proceso proceso;
+        private final int inicio;
+        private final int fin;
+        private final boolean cpuOciosa;
+
+
+        private SegmentoDosNiveles(
+                Proceso proceso,
+                int inicio,
+                int fin,
+                boolean cpuOciosa) {
+
+            this.proceso = proceso;
+            this.inicio = inicio;
+            this.fin = fin;
+            this.cpuOciosa = cpuOciosa;
+        }
+
+
+        public Proceso getProceso() {
+            return proceso;
+        }
+
+
+        public int getInicio() {
+            return inicio;
+        }
+
+
+        public int getFin() {
+            return fin;
+        }
+
+
+        public boolean esCPUOciosa() {
+            return cpuOciosa;
+        }
+    }
     // ==============================================
     // PRIORIDAD
     // ==============================================
@@ -1108,22 +1157,6 @@ public class ProcessesController {
         }
 
 
-        if (DOS_NIVELES.equals(algoritmo)) {
-
-            ejecutarDosNiveles();
-
-            return;
-        }
-
-
-        if (GARANTIZADA.equals(algoritmo)) {
-
-            ejecutarGarantizada();
-
-            return;
-        }
-
-
         prepararPlanificacion();
 
 
@@ -1208,22 +1241,6 @@ public class ProcessesController {
             mostrarError(
                     "Agregue al menos un proceso pendiente."
             );
-
-            return;
-        }
-
-
-        if (DOS_NIVELES.equals(algoritmo)) {
-
-            ejecutarDosNiveles();
-
-            return;
-        }
-
-
-        if (GARANTIZADA.equals(algoritmo)) {
-
-            ejecutarGarantizada();
 
             return;
         }
@@ -1367,7 +1384,43 @@ public class ProcessesController {
                 resultadoSJF = null;
                 resultadoPrioridad = null;
                 resultadoColas = null;
+                resultadoDosNiveles = null;
+                resultadoGarantizada = null;
+
+                segmentosDosNiveles.clear();
             }
+
+
+            case DOS_NIVELES -> {
+
+                if (!prepararDosNiveles()) {
+                    return;
+                }
+
+                resultadoFCFS = null;
+                resultadoSJF = null;
+                resultadoPrioridad = null;
+                resultadoColas = null;
+                resultadoRoundRobin = null;
+                resultadoGarantizada = null;
+            }
+
+
+            case GARANTIZADA -> {
+
+                prepararGarantizada();
+
+                resultadoFCFS = null;
+                resultadoSJF = null;
+                resultadoPrioridad = null;
+                resultadoColas = null;
+                resultadoRoundRobin = null;
+                resultadoDosNiveles = null;
+
+                segmentosDosNiveles.clear();
+            }
+
+
             case null, default -> {
 
                 mostrarError(
@@ -1440,6 +1493,12 @@ public class ProcessesController {
                 cmbAlgorithm.getValue();
 
 
+        if (GARANTIZADA.equals(algoritmo)) {
+
+            actualizarEstadosGarantizada();
+
+            return;
+        }
         /*
          * Round Robin necesita una lógica diferente,
          * porque un mismo proceso puede entrar
@@ -1462,7 +1521,8 @@ public class ProcessesController {
          * Prioridad
          * Colas múltiples
          */
-        for (Proceso proceso : procesos) {
+        for (Proceso proceso :
+                procesosSimulacionActual) {
 
 
             /*
@@ -1562,7 +1622,8 @@ public class ProcessesController {
          * todos los procesos según el tiempo
          * actual de la simulación.
          */
-        for (Proceso proceso : procesos) {
+        for (Proceso proceso :
+                procesosSimulacionActual) {
 
 
             /*
@@ -1746,6 +1807,503 @@ public class ProcessesController {
     }
 
 
+    //Dos niveles
+    private boolean prepararDosNiveles() {
+
+        segmentosDosNiveles.clear();
+
+
+        for (Proceso proceso :
+                procesosSimulacionActual) {
+
+            proceso.reiniciarSimulacion();
+        }
+
+
+        if (procesosSimulacionActual.stream()
+                .anyMatch(
+                        proceso ->
+                                proceso.getMemoriaMB() <= 0
+                )) {
+
+            mostrarError(
+                    "Todos los procesos de dos niveles "
+                            + "deben tener memoria mayor que 0 MB."
+            );
+
+            return false;
+        }
+
+
+        resultadoDosNiveles =
+                planDosNiveles.simular(
+
+                        1200,
+
+                        procesosSimulacionActual.stream()
+
+                                .sorted(
+                                        Comparator
+                                                .comparingInt(
+                                                        Proceso::getTiempoLlegada
+                                                )
+                                                .thenComparingInt(
+                                                        Proceso::getPid
+                                                )
+                                )
+
+                                .map(
+                                        proceso ->
+                                                new PlanDosNiveles.ProcesoPlanificado(
+                                                        proceso.getPid(),
+                                                        proceso.getNombre(),
+                                                        proceso.getMemoriaMB(),
+                                                        proceso.getRafagaCPU()
+                                                )
+                                )
+
+                                .toList()
+                );
+
+
+        int tiempoActual = 0;
+
+
+        for (PlanDosNiveles.ProcesoPlanificado planificado :
+                resultadoDosNiveles.ordenEjecucion()) {
+
+
+            Proceso proceso =
+                    buscarProcesoPorPid(
+                            planificado.pid()
+                    );
+
+
+            if (proceso == null) {
+                continue;
+            }
+
+
+            /*
+             * Si todavía no llegó el siguiente proceso,
+             * la CPU permanece libre.
+             */
+            if (tiempoActual
+                    < proceso.getTiempoLlegada()) {
+
+
+                segmentosDosNiveles.add(
+
+                        new SegmentoDosNiveles(
+                                null,
+                                tiempoActual,
+                                proceso.getTiempoLlegada(),
+                                true
+                        )
+                );
+
+
+                tiempoActual =
+                        proceso.getTiempoLlegada();
+            }
+
+
+            int inicio =
+                    tiempoActual;
+
+
+            int fin =
+                    inicio
+                            + proceso.getRafagaCPU();
+
+
+            proceso.setTiempoInicio(
+                    inicio
+            );
+
+
+            proceso.setTiempoFinalizacion(
+                    fin
+            );
+
+
+            proceso.setTiempoEspera(
+
+                    Math.max(
+                            0,
+                            inicio
+                                    - proceso.getTiempoLlegada()
+                    )
+            );
+
+
+            proceso.setTiempoRespuesta(
+                    proceso.getTiempoEspera()
+            );
+
+
+            proceso.setTiempoRestante(
+                    proceso.getRafagaCPU()
+            );
+
+
+            segmentosDosNiveles.add(
+
+                    new SegmentoDosNiveles(
+                            proceso,
+                            inicio,
+                            fin,
+                            false
+                    )
+            );
+
+
+            tiempoActual =
+                    fin;
+        }
+
+
+        return true;
+    }
+
+
+
+
+    //Planificacion garantizada
+    private void prepararGarantizada() {
+
+        for (Proceso proceso :
+                procesosSimulacionActual) {
+
+            proceso.reiniciarSimulacion();
+        }
+
+
+        resultadoGarantizada =
+                planGarantizada.simular(
+
+                        procesosSimulacionActual.stream()
+
+                                .sorted(
+                                        Comparator
+                                                .comparingInt(
+                                                        Proceso::getTiempoLlegada
+                                                )
+                                                .thenComparingInt(
+                                                        Proceso::getPid
+                                                )
+                                )
+
+                                .map(
+                                        proceso ->
+                                                new PlanGarantizada.ProcesoGarantizado(
+                                                        proceso.getPid(),
+                                                        proceso.getNombre(),
+                                                        proceso.getRafagaCPU(),
+                                                        proceso.getTiempoLlegada()
+                                                )
+                                )
+
+                                .toList()
+                );
+
+
+        /*
+         * Calculamos las métricas finales,
+         * pero todavía NO marcamos los procesos
+         * como terminados.
+         */
+        for (Proceso proceso :
+                procesosSimulacionActual) {
+
+
+            List<PlanGarantizada.Paso> pasosProceso =
+
+                    resultadoGarantizada
+                            .pasos()
+                            .stream()
+
+                            .filter(
+                                    paso ->
+                                            paso.proceso().pid()
+                                                    == proceso.getPid()
+                            )
+
+                            .toList();
+
+
+            if (pasosProceso.isEmpty()) {
+                continue;
+            }
+
+
+            int inicio =
+                    pasosProceso.stream()
+
+                            .mapToInt(
+                                    PlanGarantizada.Paso::inicio
+                            )
+
+                            .min()
+
+                            .orElse(
+                                    proceso.getTiempoLlegada()
+                            );
+
+
+            int fin =
+                    pasosProceso.stream()
+
+                            .mapToInt(
+                                    PlanGarantizada.Paso::fin
+                            )
+
+                            .max()
+
+                            .orElse(inicio);
+
+
+            int espera =
+                    Math.max(
+                            0,
+                            fin
+                                    - proceso.getTiempoLlegada()
+                                    - proceso.getRafagaCPU()
+                    );
+
+
+            int respuesta =
+                    Math.max(
+                            0,
+                            inicio
+                                    - proceso.getTiempoLlegada()
+                    );
+
+
+            proceso.setTiempoInicio(
+                    inicio
+            );
+
+
+            proceso.setTiempoFinalizacion(
+                    fin
+            );
+
+
+            proceso.setTiempoEspera(
+                    espera
+            );
+
+
+            proceso.setTiempoRespuesta(
+                    respuesta
+            );
+
+
+            proceso.setTiempoCPURecibido(
+                    0
+            );
+
+
+            proceso.setTiempoRestante(
+                    proceso.getRafagaCPU()
+            );
+        }
+    }
+
+
+    private void actualizarEstadosGarantizada() {
+
+        if (resultadoGarantizada == null) {
+            return;
+        }
+
+
+        for (Proceso proceso :
+                procesosSimulacionActual) {
+
+
+            /*
+             * Aún no llegó.
+             */
+            if (tiempoSimulacion
+                    < proceso.getTiempoLlegada()) {
+
+
+                proceso.setEstado(
+                        EstadoProceso.NUEVO
+                );
+
+
+                proceso.setTiempoCPURecibido(
+                        0
+                );
+
+
+                proceso.setTiempoRestante(
+                        proceso.getRafagaCPU()
+                );
+
+
+                continue;
+            }
+
+
+            int ejecutado =
+                    calcularTiempoEjecutadoGarantizada(
+                            proceso,
+                            tiempoSimulacion
+                    );
+
+
+            int restante =
+                    Math.max(
+                            0,
+                            proceso.getRafagaCPU()
+                                    - ejecutado
+                    );
+
+
+            proceso.setTiempoCPURecibido(
+                    ejecutado
+            );
+
+
+            proceso.setTiempoRestante(
+                    restante
+            );
+
+
+            /*
+             * Ya consumió toda su ráfaga.
+             */
+            if (restante == 0) {
+
+
+                proceso.setEstado(
+                        EstadoProceso.TERMINADO
+                );
+
+
+                continue;
+            }
+
+
+            PlanGarantizada.Paso pasoActual =
+                    obtenerPasoActualGarantizada();
+
+
+            if (pasoActual != null
+                    && pasoActual.proceso().pid()
+                    == proceso.getPid()) {
+
+
+                proceso.setEstado(
+                        EstadoProceso.EJECUCION
+                );
+
+
+            } else {
+
+
+                proceso.setEstado(
+                        EstadoProceso.LISTO
+                );
+            }
+        }
+    }
+
+
+    private PlanGarantizada.Paso obtenerPasoActualGarantizada() {
+
+        if (resultadoGarantizada == null) {
+            return null;
+        }
+
+
+        for (PlanGarantizada.Paso paso :
+                resultadoGarantizada.pasos()) {
+
+
+            if (paso.inicio()
+                    <= tiempoSimulacion
+                    &&
+                    tiempoSimulacion
+                            < paso.fin()) {
+
+
+                return paso;
+            }
+        }
+
+
+        return null;
+    }
+
+
+    private int calcularTiempoEjecutadoGarantizada(
+            Proceso proceso,
+            int tiempoActual) {
+
+
+        if (resultadoGarantizada == null) {
+            return 0;
+        }
+
+
+        int ejecutado = 0;
+
+
+        for (PlanGarantizada.Paso paso :
+                resultadoGarantizada.pasos()) {
+
+
+            if (paso.proceso().pid()
+                    != proceso.getPid()) {
+
+                continue;
+            }
+
+
+            /*
+             * Todavía no comenzó este paso.
+             */
+            if (tiempoActual
+                    <= paso.inicio()) {
+
+                continue;
+            }
+
+
+            /*
+             * Paso completamente ejecutado.
+             */
+            if (tiempoActual
+                    >= paso.fin()) {
+
+
+                ejecutado +=
+                        paso.fin()
+                                - paso.inicio();
+
+
+            } else {
+
+
+                /*
+                 * Estamos dentro del paso.
+                 */
+                ejecutado +=
+                        tiempoActual
+                                - paso.inicio();
+            }
+        }
+
+
+        return ejecutado;
+    }
+
+
     private int obtenerTiempoTotal() {
 
         String algoritmo =
@@ -1767,12 +2325,14 @@ public class ProcessesController {
                     .getTiempoTotal();
         }
 
+
         if (PRIORIDAD.equals(algoritmo)
                 && resultadoPrioridad != null) {
 
             return resultadoPrioridad
                     .getTiempoTotal();
         }
+
 
         if (COLAS_MULTIPLES.equals(algoritmo)
                 && resultadoColas != null) {
@@ -1781,11 +2341,31 @@ public class ProcessesController {
                     .getTiempoTotal();
         }
 
+
         if (ROUND_ROBIN.equals(algoritmo)
                 && resultadoRoundRobin != null) {
 
             return resultadoRoundRobin
                     .getTiempoTotal();
+        }
+
+
+        if (DOS_NIVELES.equals(algoritmo)
+                && !segmentosDosNiveles.isEmpty()) {
+
+            return segmentosDosNiveles
+                    .get(
+                            segmentosDosNiveles.size() - 1
+                    )
+                    .getFin();
+        }
+
+
+        if (GARANTIZADA.equals(algoritmo)
+                && resultadoGarantizada != null) {
+
+            return resultadoGarantizada
+                    .tiempoTotal();
         }
 
 
@@ -1831,12 +2411,31 @@ public class ProcessesController {
                     .getEsperaPromedio();
         }
 
+
         if (ROUND_ROBIN.equals(algoritmo)
                 && resultadoRoundRobin != null) {
 
             return resultadoRoundRobin
                     .getEsperaPromedio();
         }
+
+
+        if ((DOS_NIVELES.equals(algoritmo)
+                || GARANTIZADA.equals(algoritmo))
+                && !procesosSimulacionActual.isEmpty()) {
+
+            return procesosSimulacionActual
+                    .stream()
+
+                    .mapToInt(
+                            Proceso::getTiempoEspera
+                    )
+
+                    .average()
+
+                    .orElse(0);
+        }
+
 
         return 0;
     }
@@ -1886,6 +2485,24 @@ public class ProcessesController {
             return resultadoRoundRobin
                     .getRespuestaPromedio();
         }
+
+
+        if ((DOS_NIVELES.equals(algoritmo)
+                || GARANTIZADA.equals(algoritmo))
+                && !procesosSimulacionActual.isEmpty()) {
+
+            return procesosSimulacionActual
+                    .stream()
+
+                    .mapToInt(
+                            Proceso::getTiempoRespuesta
+                    )
+
+                    .average()
+
+                    .orElse(0);
+        }
+
 
         return 0;
     }
@@ -1978,7 +2595,8 @@ public class ProcessesController {
     private Proceso obtenerProcesoEnCPU() {
 
 
-        for (Proceso proceso : procesos) {
+        for (Proceso proceso :
+                procesosSimulacionActual) {
 
 
             if (proceso.getEstado()
@@ -2126,18 +2744,35 @@ public class ProcessesController {
 
             actualizarGanttFCFS();
 
+
         } else if (SJF.equals(algoritmo)) {
 
             actualizarGanttSJF();
-        }else if (PRIORIDAD.equals(algoritmo)) {
+
+
+        } else if (PRIORIDAD.equals(algoritmo)) {
 
             actualizarGanttPrioridad();
+
+
         } else if (COLAS_MULTIPLES.equals(algoritmo)) {
 
             actualizarGanttColas();
+
+
         } else if (ROUND_ROBIN.equals(algoritmo)) {
 
             actualizarGanttRoundRobin();
+
+
+        } else if (DOS_NIVELES.equals(algoritmo)) {
+
+            actualizarGanttDosNiveles();
+
+
+        } else if (GARANTIZADA.equals(algoritmo)) {
+
+            actualizarGanttGarantizada();
         }
     }
 
@@ -2293,6 +2928,94 @@ public class ProcessesController {
     }
 
 
+    private void actualizarGanttDosNiveles() {
+
+        for (SegmentoDosNiveles segmento :
+                segmentosDosNiveles) {
+
+
+            if (segmento.getInicio()
+                    > tiempoSimulacion) {
+
+                continue;
+            }
+
+
+            agregarBloqueGantt(
+
+                    segmento.getProceso(),
+
+                    segmento.getInicio(),
+
+                    segmento.getFin(),
+
+                    segmento.esCPUOciosa()
+            );
+        }
+    }
+
+
+    private void actualizarGanttGarantizada() {
+
+        if (resultadoGarantizada == null) {
+            return;
+        }
+
+
+        int cursor = 0;
+
+
+        for (PlanGarantizada.Paso paso :
+                resultadoGarantizada.pasos()) {
+
+
+            if (paso.inicio()
+                    > tiempoSimulacion) {
+
+                break;
+            }
+
+
+            /*
+             * Si hubo un periodo sin procesos,
+             * mostramos CPU LIBRE.
+             */
+            if (cursor
+                    < paso.inicio()) {
+
+
+                agregarBloqueGantt(
+                        null,
+                        cursor,
+                        paso.inicio(),
+                        true
+                );
+            }
+
+
+            Proceso proceso =
+                    buscarProcesoPorPid(
+                            paso.proceso().pid()
+                    );
+
+
+            if (proceso != null) {
+
+
+                agregarBloqueGantt(
+                        proceso,
+                        paso.inicio(),
+                        paso.fin(),
+                        false
+                );
+            }
+
+
+            cursor =
+                    paso.fin();
+        }
+    }
+
 
     private void agregarBloqueGantt(
             Proceso proceso,
@@ -2401,312 +3124,6 @@ public class ProcessesController {
         javafx.application.Platform.runLater(
                 () -> ganttScrollPane.setHvalue(1.0));
     }
-
-
-    // ==============================================
-    // DOS NIVELES Y GARANTIZADA
-    // ==============================================
-
-    private void ejecutarDosNiveles() {
-
-        procesosSimulacionActual.clear();
-
-
-        for (Proceso proceso : procesos) {
-
-            if (proceso.getEstado()
-                    != EstadoProceso.TERMINADO) {
-
-                proceso.reiniciarSimulacion();
-
-                procesosSimulacionActual.add(
-                        proceso
-                );
-            }
-        }
-
-
-        if (procesosSimulacionActual.stream()
-                .anyMatch(proceso -> proceso.getMemoriaMB() <= 0)) {
-
-            mostrarError(
-                    "Todos los procesos de dos niveles deben tener memoria mayor que 0 MB."
-            );
-
-            return;
-        }
-
-
-        PlanDosNiveles.Resultado resultado =
-                planDosNiveles.simular(
-                        1200,
-                        procesosSimulacionActual.stream()
-                                .sorted(
-                                        Comparator
-                                                .comparingInt(Proceso::getTiempoLlegada)
-                                                .thenComparingInt(Proceso::getPid)
-                                )
-                                .map(proceso ->
-                                        new PlanDosNiveles.ProcesoPlanificado(
-                                                proceso.getPid(),
-                                                proceso.getNombre(),
-                                                proceso.getMemoriaMB(),
-                                                proceso.getRafagaCPU()
-                                        )
-                                )
-                                .toList()
-                );
-
-
-        ganttContainer
-                .getChildren()
-                .clear();
-
-
-        int tiempoActual = 0;
-
-        double sumaEspera = 0;
-
-        double sumaRespuesta = 0;
-
-
-        for (PlanDosNiveles.ProcesoPlanificado planificado :
-                resultado.ordenEjecucion()) {
-
-            Proceso proceso =
-                    buscarProcesoPorPid(
-                            planificado.pid()
-                    );
-
-
-            if (proceso == null) {
-
-                continue;
-            }
-
-
-            if (tiempoActual
-                    < proceso.getTiempoLlegada()) {
-
-                agregarBloqueGantt(
-                        null,
-                        tiempoActual,
-                        proceso.getTiempoLlegada(),
-                        true
-                );
-
-                tiempoActual =
-                        proceso.getTiempoLlegada();
-            }
-
-
-            int inicio =
-                    tiempoActual;
-
-            int fin =
-                    inicio
-                            + proceso.getRafagaCPU();
-
-
-            proceso.setTiempoInicio(
-                    inicio
-            );
-
-            proceso.setTiempoFinalizacion(
-                    fin
-            );
-
-            proceso.setTiempoEspera(
-                    inicio
-                            - proceso.getTiempoLlegada()
-            );
-
-            proceso.setTiempoRespuesta(
-                    proceso.getTiempoEspera()
-            );
-
-            proceso.setTiempoRestante(
-                    0
-            );
-
-            proceso.setEstado(
-                    EstadoProceso.TERMINADO
-            );
-
-
-            agregarBloqueGantt(
-                    proceso,
-                    inicio,
-                    fin,
-                    false
-            );
-
-
-            sumaEspera += proceso.getTiempoEspera();
-
-            sumaRespuesta += proceso.getTiempoRespuesta();
-
-            tiempoActual =
-                    fin;
-        }
-
-
-        finalizarPlanificacionDirecta(
-                tiempoActual,
-                sumaEspera,
-                sumaRespuesta,
-                "Dos niveles ejecutado: procesos cargados en memoria principal y secundaria."
-        );
-    }
-
-
-    private void ejecutarGarantizada() {
-
-        procesosSimulacionActual.clear();
-
-
-        for (Proceso proceso : procesos) {
-
-            if (proceso.getEstado()
-                    != EstadoProceso.TERMINADO) {
-
-                proceso.reiniciarSimulacion();
-
-                procesosSimulacionActual.add(
-                        proceso
-                );
-            }
-        }
-
-
-        PlanGarantizada.Resultado resultado =
-                planGarantizada.simular(
-                        procesosSimulacionActual.stream()
-                                .sorted(
-                                        Comparator
-                                                .comparingInt(Proceso::getTiempoLlegada)
-                                                .thenComparingInt(Proceso::getPid)
-                                )
-                                .map(proceso ->
-                                        new PlanGarantizada.ProcesoGarantizado(
-                                                proceso.getPid(),
-                                                proceso.getNombre(),
-                                                proceso.getRafagaCPU()
-                                        )
-                                )
-                                .toList()
-                );
-
-
-        ganttContainer
-                .getChildren()
-                .clear();
-
-
-        for (PlanGarantizada.Paso paso :
-                resultado.pasos()) {
-
-            Proceso proceso =
-                    buscarProcesoPorPid(
-                            paso.proceso().pid()
-                    );
-
-
-            if (proceso != null) {
-
-                agregarBloqueGantt(
-                        proceso,
-                        paso.inicio(),
-                        paso.fin(),
-                        false
-                );
-            }
-        }
-
-
-        double sumaEspera = 0;
-
-        double sumaRespuesta = 0;
-
-
-        for (Proceso proceso :
-                procesosSimulacionActual) {
-
-            int inicio =
-                    resultado.pasos()
-                            .stream()
-                            .filter(paso -> paso.proceso().pid() == proceso.getPid())
-                            .mapToInt(PlanGarantizada.Paso::inicio)
-                            .min()
-                            .orElse(0);
-
-            int fin =
-                    resultado.pasos()
-                            .stream()
-                            .filter(paso -> paso.proceso().pid() == proceso.getPid())
-                            .mapToInt(PlanGarantizada.Paso::fin)
-                            .max()
-                            .orElse(0);
-
-            int espera =
-                    Math.max(
-                            0,
-                            fin
-                                    - proceso.getTiempoLlegada()
-                                    - proceso.getRafagaCPU()
-                    );
-
-            int respuesta =
-                    Math.max(
-                            0,
-                            inicio
-                                    - proceso.getTiempoLlegada()
-                    );
-
-
-            proceso.setTiempoInicio(
-                    inicio
-            );
-
-            proceso.setTiempoFinalizacion(
-                    fin
-            );
-
-            proceso.setTiempoEspera(
-                    espera
-            );
-
-            proceso.setTiempoRespuesta(
-                    respuesta
-            );
-
-            proceso.setTiempoCPURecibido(
-                    proceso.getRafagaCPU()
-            );
-
-            proceso.setTiempoRestante(
-                    0
-            );
-
-            proceso.setEstado(
-                    EstadoProceso.TERMINADO
-            );
-
-
-            sumaEspera += espera;
-
-            sumaRespuesta += respuesta;
-        }
-
-
-        finalizarPlanificacionDirecta(
-                resultado.tiempoTotal(),
-                sumaEspera,
-                sumaRespuesta,
-                "Garantizada ejecutada: cada proceso activo recibe una cuota aproximada de 1/n de CPU."
-        );
-    }
-
 
     private void finalizarPlanificacionDirecta(
             int tiempoTotal,
@@ -2900,6 +3317,11 @@ public class ProcessesController {
         resultadoPrioridad = null;
         resultadoColas = null;
         resultadoRoundRobin = null;
+        resultadoDosNiveles = null;
+        resultadoGarantizada = null;
+
+        segmentosDosNiveles.clear();
+        procesosSimulacionActual.clear();
 
         tiempoSimulacion = 0;
 
