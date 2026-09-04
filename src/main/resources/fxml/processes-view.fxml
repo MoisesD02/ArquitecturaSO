@@ -11,6 +11,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.ScrollPane?>
 
 <VBox xmlns="http://javafx.com/javafx/21"
       xmlns:fx="http://javafx.com/fxml/1"
@@ -254,11 +255,15 @@
     </HBox>
 
 
+
     <!-- CPU + GANTT -->
-    <HBox spacing="14">
+    <HBox spacing="14"
+          fillHeight="true">
 
         <!-- CPU -->
-        <VBox prefWidth="275"
+        <VBox minWidth="260"
+              prefWidth="260"
+              maxWidth="260"
               spacing="9"
               styleClass="card">
 
@@ -266,14 +271,12 @@
                    styleClass="card-title"/>
 
             <HBox spacing="7">
-
                 <Label text="Tiempo:"
                        styleClass="muted"/>
 
                 <Label fx:id="lblSimulationTime"
                        text="0"
                        styleClass="value"/>
-
             </HBox>
 
             <HBox spacing="7">
@@ -312,22 +315,40 @@
 
         <!-- GANTT -->
         <VBox spacing="9"
+              minWidth="0"
+              maxWidth="Infinity"
               styleClass="card"
               HBox.hgrow="ALWAYS">
 
             <Label text="DIAGRAMA DE GANTT"
                    styleClass="card-title"/>
 
-            <HBox fx:id="ganttContainer"
-                  alignment="CENTER_LEFT"
-                  spacing="0"
-                  minHeight="82">
+            <ScrollPane fx:id="ganttScrollPane"
+                        fitToHeight="true"
+                        fitToWidth="false"
+                        hbarPolicy="AS_NEEDED"
+                        vbarPolicy="NEVER"
+                        prefHeight="105"
+                        maxWidth="Infinity"
+                        styleClass="gantt-scroll"
+                        VBox.vgrow="ALWAYS">
 
-                <Label fx:id="lblGanttEmpty"
-                       text="Esperando ejecución..."
-                       styleClass="muted"/>
+                <content>
 
-            </HBox>
+                    <HBox fx:id="ganttContainer"
+                          alignment="CENTER_LEFT"
+                          spacing="0"
+                          minHeight="82">
+
+                        <Label fx:id="lblGanttEmpty"
+                               text="Esperando ejecución..."
+                               styleClass="muted"/>
+
+                    </HBox>
+
+                </content>
+
+            </ScrollPane>
 
         </VBox>
 

@@ -39,7 +39,7 @@ import javafx.util.Duration;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-
+import javafx.scene.control.ScrollPane;
 
 public class ProcessesController {
 
@@ -303,6 +303,8 @@ public class ProcessesController {
     @FXML
     private HBox ganttContainer;
 
+    @FXML
+    private ScrollPane ganttScrollPane;
 
     @FXML
     private Label lblGanttEmpty;
@@ -2303,13 +2305,19 @@ public class ProcessesController {
                 new VBox(3);
 
 
-        bloque.setMinWidth(
-
+        double ancho =
                 Math.max(
-                        70,
-                        (fin - inicio) * 35
-                )
-        );
+                        60,
+                        Math.min(
+                                140,
+                                (fin - inicio) * 28
+                        )
+                );
+
+
+        bloque.setMinWidth(ancho);
+        bloque.setPrefWidth(ancho);
+        bloque.setMaxWidth(ancho);
 
 
         bloque.setAlignment(
@@ -2390,6 +2398,8 @@ public class ProcessesController {
                 .add(
                         bloque
                 );
+        javafx.application.Platform.runLater(
+                () -> ganttScrollPane.setHvalue(1.0));
     }
 
 
