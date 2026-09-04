@@ -865,6 +865,74 @@ public class ProcessesController {
             );
         }
 
+        if (PRIORIDAD.equals(algoritmo)) {
+
+            agregarProcesoEjemploPrioridad(
+                    "Proceso 1",
+                    0,
+                    5,
+                    2
+            );
+
+            agregarProcesoEjemploPrioridad(
+                    "Proceso 2",
+                    1,
+                    3,
+                    1
+            );
+
+            agregarProcesoEjemploPrioridad(
+                    "Proceso 3",
+                    2,
+                    4,
+                    3
+            );
+        }
+
+        if (COLAS_MULTIPLES.equals(algoritmo)) {
+
+            agregarProcesoEjemploCola(
+                    "Proceso 1",
+                    0,
+                    5,
+                    "Interactivo"
+            );
+
+            agregarProcesoEjemploCola(
+                    "Proceso 2",
+                    1,
+                    3,
+                    "Sistema"
+            );
+
+            agregarProcesoEjemploCola(
+                    "Proceso 3",
+                    2,
+                    4,
+                    "Segundo plano"
+            );
+        }
+
+        if (ROUND_ROBIN.equals(algoritmo)) {
+
+            agregarProcesoEjemplo(
+                    0,
+                    5
+            );
+
+            agregarProcesoEjemplo(
+                    1,
+                    3
+            );
+
+            agregarProcesoEjemplo(
+                    2,
+                    4
+            );
+
+            txtQuantum.setText("2");
+        }
+
 
         ordenarTablaPorLlegada();
 
@@ -885,6 +953,70 @@ public class ProcessesController {
                 llegada,
                 rafaga,
                 0
+        );
+    }
+
+    private void agregarProcesoEjemploPrioridad(
+            String nombre,
+            int llegada,
+            int rafaga,
+            int prioridad) {
+
+        Proceso proceso =
+                new Proceso(
+                        siguientePid++,
+                        nombre,
+                        llegada,
+                        rafaga,
+                        0,
+                        prioridad,
+                        ""
+                );
+
+        if (llegada == 0) {
+            proceso.setEstado(
+                    EstadoProceso.LISTO
+            );
+        } else {
+            proceso.setEstado(
+                    EstadoProceso.NUEVO
+            );
+        }
+
+        procesos.add(
+                proceso
+        );
+    }
+
+    private void agregarProcesoEjemploCola(
+            String nombre,
+            int llegada,
+            int rafaga,
+            String cola) {
+
+        Proceso proceso =
+                new Proceso(
+                        siguientePid++,
+                        nombre,
+                        llegada,
+                        rafaga,
+                        0,
+                        0,
+                        cola
+                );
+
+        if (llegada == 0) {
+            proceso.setEstado(
+                    EstadoProceso.LISTO
+            );
+        } else {
+            proceso.setEstado(
+                    EstadoProceso.NUEVO
+            );
+        }
+
+        procesos.add(
+                proceso
         );
     }
 
