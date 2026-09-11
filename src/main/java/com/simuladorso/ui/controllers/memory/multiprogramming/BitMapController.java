@@ -80,8 +80,6 @@ public class BitMapController {
             Allocation a = list.getSelectionModel().getSelectedItem();
             if (a != null) { memory.release(a.id()); refresh(); record(a.name() + " liberado. Sus bits vuelven a 0."); }
         });
-        Button clearSelection = new Button("Quitar resaltado");
-        clearSelection.setOnAction(e -> list.getSelectionModel().clearSelection());
         Button reset = new Button("Reiniciar mapa");
         reset.setOnAction(e -> { memory.reset(); refresh(); log.clear(); record("Mapa reiniciado: 1024 unidades libres."); });
         Button example = new Button("Ejemplo de clase");
@@ -93,7 +91,7 @@ public class BitMapController {
         });
         FlowPane actions = new FlowPane(10, 10, field("Nombre", name), field("Memoria solicitada (KB)", size), add);
         actions.setAlignment(javafx.geometry.Pos.BOTTOM_LEFT);
-        FlowPane tools = new FlowPane(10, 10, release, clearSelection, example, reset);
+        FlowPane tools = new FlowPane(10, 10, release, example, reset);
         reset.setStyle("-fx-text-fill: #b42318;");
         list.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
         column("Proceso", a -> a.name());
@@ -122,6 +120,19 @@ public class BitMapController {
         history.setExpanded(false);
         root.getChildren().addAll(subtitle, title, metrics, occupancy, summary, configPane, legend, map, detail, actions,
                 message, new Label("Procesos en memoria"), list, tools, history, note);
+        javafx.event.EventHandler<javafx.scene.input.MouseEvent> dismissSelection = event -> {
+            if (!(event.getTarget() instanceof javafx.scene.Node target)) return;
+            for (javafx.scene.Node node = target; node != null; node = node.getParent()) {
+                // Preserve the selected process until its release action executes.
+                if (node == canvas || node == release) return;
+                if (node instanceof TableRow<?> row && !row.isEmpty() && row.getTableView() == list) return;
+            }
+            list.getSelectionModel().clearSelection();
+        };
+        root.sceneProperty().addListener((observable, previous, current) -> {
+            if (previous != null) previous.removeEventFilter(javafx.scene.input.MouseEvent.MOUSE_PRESSED, dismissSelection);
+            if (current != null) current.addEventFilter(javafx.scene.input.MouseEvent.MOUSE_PRESSED, dismissSelection);
+        });
         refresh(); record("Mapa preparado. Configura la unidad y agrega un proceso.");
     }
     private VBox metric(String caption, Label value) {
