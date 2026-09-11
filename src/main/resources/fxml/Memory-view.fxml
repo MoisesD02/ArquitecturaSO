@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.simuladorso.ui.controllers.memory.MemoryController"
+      spacing="16"
+      alignment="TOP_CENTER"
+      styleClass="content-container">
+
+    <padding>
+        <Insets top="20" right="24" bottom="20" left="24"/>
+    </padding>
+
+    <!-- ENCABEZADO -->
+    <VBox spacing="4" alignment="CENTER">
+        <Label text="Gestión de Memoria" styleClass="page-title"/>
+    </VBox>
+
+    <Separator maxWidth="700"/>
+
+    <!-- BOTONES DE MODO PRINCIPAL (MÁS GRANDES Y CENTRADOS) -->
+    <HBox alignment="CENTER" spacing="20">
+        <Button fx:id="btnMultiprogramming"
+                text="Multiprogramación"
+                onAction="#showMultiprogramming"
+                prefHeight="45"
+                prefWidth="220"
+                styleClass="button-primary"/>
+
+        <Button fx:id="btnVirtualMemory"
+                text="Memoria Virtual"
+                onAction="#showVirtualMemory"
+                prefHeight="45"
+                prefWidth="220"
+                styleClass="button-secondary"/>
+    </HBox>
+
+    <!-- SUB-OPCIONES (LISTA VERTICAL CENTRADA) -->
+    <StackPane fx:id="subOptionsArea" maxWidth="600">
+
+        <!-- SUB-OPCIONES MULTIPROGRAMACIÓN (FORMATO LISTA) -->
+        <VBox fx:id="optsMultiprogramming"
+              spacing="12"
+              alignment="CENTER"
+              styleClass="card, compact-card">
+
+            <Label text="Asignación Contigua de Memoria" styleClass="card-title"/>
+
+            <!-- CONTENEDOR EN LISTA VERTICAL -->
+            <VBox alignment="CENTER" spacing="10" maxWidth="520">
+
+                <!-- OPCIÓN 1: LISTAS LIGADAS -->
+                <HBox spacing="12" alignment="CENTER_LEFT" styleClass="card" prefHeight="55">
+                    <padding>
+                        <Insets top="8" right="14" bottom="8" left="14"/>
+                    </padding>
+                    <VBox spacing="2" HBox.hgrow="ALWAYS">
+                        <Label text="Listas Ligadas" styleClass="card-title"/>
+                        <Label text="Ajuste de particiones dinámicas" styleClass="muted"/>
+                    </VBox>
+
+                    <ComboBox fx:id="cmbLinkedListFit"
+                              promptText="Ajuste..."
+                              prefWidth="130"
+                              prefHeight="34"/>
+
+                    <Button text="Cargar"
+                            onAction="#handleOpenLinkedList"
+                            prefHeight="34"
+                            prefWidth="90"
+                            styleClass="button-primary"/>
+                </HBox>
+
+                <!-- OPCIÓN 2: MAPA DE BITS -->
+                <HBox spacing="12" alignment="CENTER_LEFT" styleClass="card" prefHeight="55">
+                    <padding>
+                        <Insets top="8" right="14" bottom="8" left="14"/>
+                    </padding>
+                    <VBox spacing="2" HBox.hgrow="ALWAYS">
+                        <Label text="Mapa de Bits" styleClass="card-title"/>
+                        <Label text="Gestión por bloques discretos" styleClass="muted"/>
+                    </VBox>
+
+                    <Button text="Cargar"
+                            onAction="#handleOpenBitMap"
+                            prefHeight="34"
+                            prefWidth="90"
+                            styleClass="button-secondary"/>
+                </HBox>
+
+            </VBox>
+        </VBox>
+
+        <!-- SUB-OPCIONES MEMORIA VIRTUAL (FORMATO LISTA) -->
+        <VBox fx:id="optsVirtualMemory"
+              spacing="12"
+              alignment="CENTER"
+              visible="false"
+              managed="false"
+              styleClass="card, compact-card">
+
+            <Label text="Algoritmos de Reemplazo de Páginas" styleClass="card-title"/>
+
+            <!-- CONTENEDOR EN LISTA VERTICAL -->
+            <VBox alignment="CENTER" spacing="10" maxWidth="520">
+
+                <!-- OPCIÓN 1: FIFO -->
+                <HBox spacing="12" alignment="CENTER_LEFT" styleClass="card" prefHeight="55">
+                    <padding>
+                        <Insets top="8" right="14" bottom="8" left="14"/>
+                    </padding>
+                    <VBox spacing="2" HBox.hgrow="ALWAYS">
+                        <Label text="FIFO" styleClass="card-title"/>
+                        <Label text="First In, First Out" styleClass="muted"/>
+                    </VBox>
+
+                    <Button text="Cargar"
+                            onAction="#handleOpenFifo"
+                            prefHeight="34"
+                            prefWidth="90"
+                            styleClass="button-secondary"/>
+                </HBox>
+
+                <!-- OPCIÓN 2: LRU -->
+                <HBox spacing="12" alignment="CENTER_LEFT" styleClass="card" prefHeight="55">
+                    <padding>
+                        <Insets top="8" right="14" bottom="8" left="14"/>
+                    </padding>
+                    <VBox spacing="2" HBox.hgrow="ALWAYS">
+                        <Label text="LRU" styleClass="card-title"/>
+                        <Label text="Least Recently Used" styleClass="muted"/>
+                    </VBox>
+
+                    <Button text="Cargar"
+                            onAction="#handleOpenLru"
+                            prefHeight="34"
+                            prefWidth="90"
+                            styleClass="button-secondary"/>
+                </HBox>
+
+                <!-- OPCIÓN 3: ÓPTIMO -->
+                <HBox spacing="12" alignment="CENTER_LEFT" styleClass="card" prefHeight="55">
+                    <padding>
+                        <Insets top="8" right="14" bottom="8" left="14"/>
+                    </padding>
+                    <VBox spacing="2" HBox.hgrow="ALWAYS">
+                        <Label text="Óptimo" styleClass="card-title"/>
+                        <Label text="Reemplazo teórico ideal" styleClass="muted"/>
+                    </VBox>
+
+                    <Button text="Cargar"
+                            onAction="#handleOpenOptimal"
+                            prefHeight="34"
+                            prefWidth="90"
+                            styleClass="button-secondary"/>
+                </HBox>
+
+            </VBox>
+        </VBox>
+
+    </StackPane>
+
+    <!-- CONTENEDOR DINÁMICO CENTRAL -->
+    <VBox fx:id="contentContainer"
+          alignment="TOP_CENTER"
+          maxWidth="1000"
+          VBox.vgrow="ALWAYS">
+        <StackPane fx:id="contentArea" maxWidth="1000"/>
+    </VBox>
+
+</VBox>

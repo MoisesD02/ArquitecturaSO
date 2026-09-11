@@ -261,11 +261,55 @@ public class MainController {
     }
 
 
-    @FXML private void showMemory() {
-        if (validarKernelActivo("inspeccionar el estado de la memoria")) {
-            mostrarPagina(memoryPage, navMemory);
+    @FXML
+    private void showMemory() {
+        if (!validarKernelActivo("inspeccionar el estado de la memoria")) {
+            return;
+        }
+
+        try {
+
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/fxml/Memory-view.fxml")
+            );
+
+            Node memoryView = loader.load();
+
+            // Contenedor con desplazamiento vertical para la vista de memoria
+            ScrollPane scrollPane = new ScrollPane(memoryView);
+            scrollPane.setFitToWidth(true);
+            scrollPane.setFitToHeight(true);
+            scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+            scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+
+            // Estilo transparente para encajar con el diseño de MiniOS
+            scrollPane.setStyle(
+                    "-fx-background-color: transparent;" +
+                            "-fx-background: transparent;"
+            );
+
+            // Ocultamos vistas estáticas previas
+            ocultarPaginasEstaticas();
+
+            // Removemos cualquier otra vista dinámica cargada previamente en el StackPane
+            centerStackPane.getChildren().removeIf(node -> node != dashboardPage
+                    && node != memoryPage
+                    && node != devicesPage
+                    && node != filesPage
+                    && node != logsPage);
+
+            // Inyectamos la nueva vista de memoria en el contenedor principal
+            centerStackPane.getChildren().add(scrollPane);
+
+            marcarBotonActivo(navMemory);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            registrarEvento("ERROR: No se pudo cargar la vista memory_view.fxml.");
         }
     }
+
+
     @FXML private void showDevices() {
         if (validarKernelActivo("consultar los dispositivos E/S")) {
             mostrarPagina(devicesPage, navDevices);
@@ -312,10 +356,18 @@ public class MainController {
 
     private void ocultarPaginasEstaticas() {
         Pane[] paginas = {dashboardPage, memoryPage, devicesPage, filesPage, logsPage};
+
         for (Pane p : paginas) {
             p.setVisible(false);
             p.setManaged(false);
         }
+
+        // Remueve cualquier ScrollPane o nodo inyectado dinámicamente
+        centerStackPane.getChildren().removeIf(node -> node != dashboardPage
+                && node != memoryPage
+                && node != devicesPage
+                && node != filesPage
+                && node != logsPage);
     }
 
     private void marcarBotonActivo(Button boton) {

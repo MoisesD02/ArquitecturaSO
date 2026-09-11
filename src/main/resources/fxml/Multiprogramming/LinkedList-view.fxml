@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.simuladorso.ui.controllers.memory.multiprogramming.LinkedListController"
+      spacing="15.0" style="-fx-padding: 10;">
+    <children>
+        <Label fx:id="lblFitTitle" text="Simulación: Listas Ligadas" style="-fx-font-size: 16px; -fx-font-weight: bold;" />
+    </children>
+</VBox>
