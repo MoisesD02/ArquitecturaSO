@@ -81,15 +81,19 @@ public class MemoryController {
 
     // --- Sub-navegación Memoria Virtual ---
 
-    @FXML private void handleOpenFifo() { loadSubView("/fxml/MemoryVirtual/fifo_page_view.fxml"); }
-    @FXML private void handleOpenLru() { loadSubView("/fxml/MemoryVirtual/lru_page_view.fxml"); }
+    @FXML private void handleOpenPageReplacement() { loadSubView("/fxml/MemoryVirtual/page_replacement_view.fxml"); }
     @FXML private void handleOpenOptimal() { loadSubView("/fxml/MemoryVirtual/opt_page_view.fxml"); }
+    @FXML private void handleOpenNru() { loadSubView("/fxml/MemoryVirtual/nru_page_view.fxml"); }
+    @FXML private void handleOpenFifo() { loadSubView("/fxml/MemoryVirtual/fifo_page_view.fxml"); }
+    @FXML private void handleOpenSecondChance() { loadSubView("/fxml/MemoryVirtual/second_chance_view.fxml"); }
+    @FXML private void handleOpenClock() { loadSubView("/fxml/MemoryVirtual/clock_page_view.fxml"); }
+    @FXML private void handleOpenLru() { loadSubView("/fxml/MemoryVirtual/lru_page_view.fxml"); }
 
     private void loadSubView(String fxmlPath) {
         try {
             var resource = getClass().getResource(fxmlPath);
             if (resource == null) {
-                System.err.println("No se encontró la sub-vista en: " + fxmlPath);
+                System.err.println("No se encontró la sub-vista en la ruta: " + fxmlPath);
                 return;
             }
             FXMLLoader loader = new FXMLLoader(resource);
