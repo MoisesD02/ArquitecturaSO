@@ -75,6 +75,7 @@ public class MainController {
             new Dispositivo("Impresora", "Salida", false)
     );
 
+    private ScrollPane cachedMemoryPane;
     private Timeline timeline;
     private Timeline realTimeTimeline;
 
@@ -273,10 +274,8 @@ public class MainController {
                     getClass().getResource("/fxml/Memory-view.fxml")
             );
 
-            Node memoryView = loader.load();
-
-            // Contenedor con desplazamiento vertical para la vista de memoria
-            ScrollPane scrollPane = new ScrollPane(memoryView);
+            if (cachedMemoryPane == null) cachedMemoryPane = new ScrollPane(loader.load());
+            ScrollPane scrollPane = cachedMemoryPane;
             scrollPane.setFitToWidth(true);
             scrollPane.setFitToHeight(true);
             scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);

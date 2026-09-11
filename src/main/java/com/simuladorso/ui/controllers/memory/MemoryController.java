@@ -17,6 +17,9 @@ public class MemoryController {
     @FXML private VBox optsVirtualMemory;
     @FXML private ComboBox<String> cmbLinkedListFit;
     @FXML private StackPane contentArea;
+    @FXML private StackPane subOptionsArea;
+    private final java.util.Map<String, Node> cachedViews = new java.util.HashMap<>();
+    private void showOptions() { subOptionsArea.setVisible(true); subOptionsArea.setManaged(true); contentArea.getChildren().clear(); }
 
     @FXML
     public void initialize() {
@@ -32,6 +35,7 @@ public class MemoryController {
 
     @FXML
     private void showMultiprogramming() {
+        showOptions();
         optsVirtualMemory.setVisible(false);
         optsVirtualMemory.setManaged(false);
 
@@ -41,6 +45,7 @@ public class MemoryController {
 
     @FXML
     private void showVirtualMemory() {
+        showOptions();
         optsMultiprogramming.setVisible(false);
         optsMultiprogramming.setManaged(false);
 
@@ -96,8 +101,13 @@ public class MemoryController {
                 System.err.println("No se encontró la sub-vista en la ruta: " + fxmlPath);
                 return;
             }
-            FXMLLoader loader = new FXMLLoader(resource);
-            Node node = loader.load();
+            Node node = cachedViews.get(fxmlPath);
+            if (node == null) {
+                FXMLLoader loader = new FXMLLoader(resource);
+                node = loader.load();
+                cachedViews.put(fxmlPath, node);
+            }
+            subOptionsArea.setVisible(false); subOptionsArea.setManaged(false);
             contentArea.getChildren().clear();
             contentArea.getChildren().add(node);
         } catch (IOException e) {
