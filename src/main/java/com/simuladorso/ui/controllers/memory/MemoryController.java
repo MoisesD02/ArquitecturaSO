@@ -18,17 +18,27 @@ import java.util.Map;
 
 public class MemoryController {
 
-    @FXML private VBox headerContainer;
-    @FXML private HBox mainButtonsContainer;
-    @FXML private HBox moduleHeaderBar;
-    @FXML private Label lblModuleTitle;
-    @FXML private Button btnCloseModule;
+    @FXML
+    private VBox headerContainer;
+    @FXML
+    private HBox mainButtonsContainer;
+    @FXML
+    private HBox moduleHeaderBar;
+    @FXML
+    private Label lblModuleTitle;
+    @FXML
+    private Button btnCloseModule;
 
-    @FXML private VBox optsMultiprogramming;
-    @FXML private VBox optsVirtualMemory;
-    @FXML private ComboBox<String> cmbLinkedListFit;
-    @FXML private StackPane contentArea;
-    @FXML private StackPane subOptionsArea;
+    @FXML
+    private VBox optsMultiprogramming;
+    @FXML
+    private VBox optsVirtualMemory;
+    @FXML
+    private ComboBox<String> cmbLinkedListFit;
+    @FXML
+    private StackPane contentArea;
+    @FXML
+    private StackPane subOptionsArea;
 
     private final Map<String, Node> cachedViews = new HashMap<>();
 
@@ -128,13 +138,35 @@ public class MemoryController {
 
     // --- Sub-navegación Memoria Virtual ---
 
-    @FXML private void handleOpenPageReplacement() { loadSubView("/fxml/MemoryVirtual/page_replacement_view.fxml", "Algoritmo de Reemplazo Base"); }
-    @FXML private void handleOpenOptimal() { loadSubView("/fxml/MemoryVirtual/opt_page_view.fxml", "Algoritmo Óptimo"); }
-    @FXML private void handleOpenNru() { loadSubView("/fxml/MemoryVirtual/nru_page_view.fxml", "Uso No Tan Reciente (NRU)"); }
-    @FXML private void handleOpenFifo() { loadSubView("/fxml/MemoryVirtual/fifo_page_view.fxml", "FIFO"); }
-    @FXML private void handleOpenSecondChance() { loadSubView("/fxml/MemoryVirtual/second_chance_view.fxml", "Segunda Oportunidad"); }
-    @FXML private void handleOpenClock() { loadSubView("/fxml/MemoryVirtual/clock_page_view.fxml", "Página de Reloj (Clock)"); }
-    @FXML private void handleOpenLru() { loadSubView("/fxml/MemoryVirtual/lru_page_view.fxml", "Menor Uso Reciente (LRU)"); }
+    @FXML
+    private void handleOpenOptimal() {
+        loadSubView("/fxml/MemoryVirtual/opt_page_view.fxml", "Algoritmo Óptimo");
+    }
+
+    @FXML
+    private void handleOpenNru() {
+        loadSubView("/fxml/MemoryVirtual/nru_page_view.fxml", "Uso No Tan Reciente (NRU)");
+    }
+
+    @FXML
+    private void handleOpenFifo() {
+        loadSubView("/fxml/MemoryVirtual/fifo_page_view.fxml", "FIFO");
+    }
+
+    @FXML
+    private void handleOpenSecondChance() {
+        loadSubView("/fxml/MemoryVirtual/second_chance_view.fxml", "Segunda Oportunidad");
+    }
+
+    @FXML
+    private void handleOpenClock() {
+        loadSubView("/fxml/MemoryVirtual/clock_page_view.fxml", "Página de Reloj (Clock)");
+    }
+
+    @FXML
+    private void handleOpenLru() {
+        loadSubView("/fxml/MemoryVirtual/lru_page_view.fxml", "Menor Uso Reciente (LRU)");
+    }
 
     // --- Carga con Caché ---
 
