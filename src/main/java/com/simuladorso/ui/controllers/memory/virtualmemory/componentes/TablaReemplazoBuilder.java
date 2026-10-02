@@ -3,6 +3,10 @@ package com.simuladorso.ui.controllers.memory.virtualmemory.componentes;
 import com.simuladorso.memory.algoritmos.PasoReemplazo;
 import com.simuladorso.memory.algoritmos.ResultadoReemplazo;
 
+import com.simuladorso.memory.algoritmos.nru.EstadoPaginaNRU;
+import com.simuladorso.memory.algoritmos.nru.PasoNRU;
+import com.simuladorso.memory.algoritmos.nru.ResultadoNRU;
+
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.ColumnConstraints;
@@ -10,24 +14,34 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class TablaReemplazoBuilder {
 
     private enum TipoCelda {
+
         TITULO,
         PASO,
         PAGINA,
+        BIT,
         MARCO,
         FALLO,
         ACIERTO,
         SALE,
-        DECISION
+        DECISION,
+        LIMPIEZA
     }
+
 
     private TablaReemplazoBuilder() {
     }
 
+
+    // =========================================================
+    // TABLA BÁSICA
+    // FIFO / OPT / LRU
+    // =========================================================
 
     public static GridPane crearTablaBasica(
             List<Integer> referencias,
@@ -62,10 +76,7 @@ public class TablaReemplazoBuilder {
                 referencias.size();
 
 
-        // =========================
-        // COLUMNAS
-        // =========================
-
+        // COLUMNA DE TÍTULOS
         ColumnConstraints col0 =
                 new ColumnConstraints();
 
@@ -79,28 +90,26 @@ public class TablaReemplazoBuilder {
                 .add(col0);
 
 
+        // COLUMNAS DE PASOS
         for (int i = 0;
              i < totalPasos;
              i++) {
 
-            ColumnConstraints colStep =
+            ColumnConstraints columna =
                     new ColumnConstraints();
 
-            colStep.setMinWidth(35);
+            columna.setMinWidth(35);
 
-            colStep.setHgrow(
+            columna.setHgrow(
                     Priority.ALWAYS
             );
 
             grid.getColumnConstraints()
-                    .add(colStep);
+                    .add(columna);
         }
 
 
-        // =========================
-        // FILA PASO
-        // =========================
-
+        // PASO
         agregarCelda(
                 grid,
                 "Paso",
@@ -125,10 +134,7 @@ public class TablaReemplazoBuilder {
         }
 
 
-        // =========================
-        // FILA PÁGINA
-        // =========================
-
+        // PÁGINA
         agregarCelda(
                 grid,
                 "Página",
@@ -153,10 +159,7 @@ public class TablaReemplazoBuilder {
         }
 
 
-        // =========================
-        // FILAS DE MARCOS
-        // =========================
-
+        // MARCOS
         for (int marco = 0;
              marco < cantidadMarcos;
              marco++) {
@@ -171,7 +174,6 @@ public class TablaReemplazoBuilder {
                     fila,
                     TipoCelda.TITULO
             );
-
 
             for (int columna = 0;
                  columna < pasos.size();
@@ -205,10 +207,7 @@ public class TablaReemplazoBuilder {
         }
 
 
-        // =========================
         // RESULTADO
-        // =========================
-
         int filaResultado =
                 cantidadMarcos + 2;
 
@@ -219,7 +218,6 @@ public class TablaReemplazoBuilder {
                 filaResultado,
                 TipoCelda.TITULO
         );
-
 
         for (int columna = 0;
              columna < pasos.size();
@@ -242,10 +240,7 @@ public class TablaReemplazoBuilder {
         }
 
 
-        // =========================
         // SALE
-        // =========================
-
         int filaSale =
                 cantidadMarcos + 3;
 
@@ -256,7 +251,6 @@ public class TablaReemplazoBuilder {
                 filaSale,
                 TipoCelda.TITULO
         );
-
 
         for (int columna = 0;
              columna < pasos.size();
@@ -281,36 +275,29 @@ public class TablaReemplazoBuilder {
                     valor,
                     columna + 1,
                     filaSale,
-
                     paso.getPaginaReemplazada()
                             != null
-
                             ? TipoCelda.DECISION
-
                             : TipoCelda.SALE
             );
         }
 
 
-        // =========================
-        // VERIFICAR SI HAY DECISIONES
-        // =========================
-
+        // DECISIONES
         boolean tieneDecisiones =
                 pasos.stream()
                         .anyMatch(
                                 paso ->
-                                        paso.getPaginaReemplazada() != null
+                                        paso.getPaginaReemplazada()
+                                                != null
                                                 &&
-                                                paso.getDetalleDecision() != null
+                                                paso.getDetalleDecision()
+                                                        != null
                                                 &&
-                                                !paso.getDetalleDecision().isBlank()
+                                                !paso.getDetalleDecision()
+                                                        .isBlank()
                         );
 
-
-        // =========================
-        // FILA DECISIÓN
-        // =========================
 
         if (tieneDecisiones) {
 
@@ -336,16 +323,14 @@ public class TablaReemplazoBuilder {
                 String detalle =
                         "-";
 
-
-                /*
-                 * Solo mostramos explicación
-                 * cuando realmente salió una página.
-                 */
-                if (paso.getPaginaReemplazada() != null
+                if (paso.getPaginaReemplazada()
+                        != null
                         &&
-                        paso.getDetalleDecision() != null
+                        paso.getDetalleDecision()
+                                != null
                         &&
-                        !paso.getDetalleDecision().isBlank()) {
+                        !paso.getDetalleDecision()
+                                .isBlank()) {
 
                     detalle =
                             paso.getDetalleDecision();
@@ -357,7 +342,9 @@ public class TablaReemplazoBuilder {
                         detalle,
                         columna + 1,
                         filaDecision,
-                        paso.getPaginaReemplazada() != null
+                        paso.getPaginaReemplazada()
+                                != null,
+                        1
                 );
             }
         }
@@ -367,6 +354,683 @@ public class TablaReemplazoBuilder {
     }
 
 
+    // =========================================================
+    // TABLA NRU
+    // Página + R + M por cada paso
+    // X / Limpiar R como columna independiente
+    // * para modificación
+    // =========================================================
+
+    public static GridPane crearTablaNRU(
+            List<Integer> referencias,
+            int cantidadMarcos,
+            ResultadoNRU resultado) {
+
+        GridPane grid =
+                new GridPane();
+
+        grid.setHgap(2);
+        grid.setVgap(2);
+
+        grid.setMaxWidth(
+                Double.MAX_VALUE
+        );
+
+        HBox.setHgrow(
+                grid,
+                Priority.ALWAYS
+        );
+
+        grid.setStyle(
+                "-fx-background-color: #cfd8e3;"
+                        + "-fx-padding: 2;"
+        );
+
+
+        List<PasoNRU> pasos =
+                resultado.getPasos();
+
+
+        /*
+         * Guardaremos la columna donde comienza
+         * cada grupo:
+         *
+         * Página | R | M
+         */
+        List<Integer> columnasPaso =
+                new ArrayList<>();
+
+        /*
+         * Si antes de un paso existe limpieza R,
+         * aquí guardamos la columna X.
+         *
+         * -1 significa que no existe.
+         */
+        List<Integer> columnasLimpieza =
+                new ArrayList<>();
+
+
+        // ============================================
+        // COLUMNA IZQUIERDA
+        // ============================================
+
+        ColumnConstraints titulo =
+                new ColumnConstraints();
+
+        titulo.setMinWidth(85);
+        titulo.setPrefWidth(95);
+
+        titulo.setHgrow(
+                Priority.NEVER
+        );
+
+        grid.getColumnConstraints()
+                .add(titulo);
+
+
+        int columnaActual =
+                1;
+
+
+        // ============================================
+        // CREAR COLUMNAS DINÁMICAS
+        // ============================================
+
+        for (int i = 0;
+             i < pasos.size();
+             i++) {
+
+            PasoNRU paso =
+                    pasos.get(i);
+
+
+            /*
+             * Si antes de este paso se limpia R,
+             * insertamos una columna X.
+             */
+            if (paso.isLimpiarR()) {
+
+                columnasLimpieza.add(
+                        columnaActual
+                );
+
+
+                ColumnConstraints colX =
+                        new ColumnConstraints();
+
+                colX.setMinWidth(70);
+                colX.setPrefWidth(80);
+
+                colX.setHgrow(
+                        Priority.NEVER
+                );
+
+
+                grid.getColumnConstraints()
+                        .add(colX);
+
+
+                columnaActual++;
+
+            } else {
+
+                columnasLimpieza.add(
+                        -1
+                );
+            }
+
+
+            /*
+             * Inicio del grupo:
+             *
+             * Página | R | M
+             */
+            columnasPaso.add(
+                    columnaActual
+            );
+
+
+            // Página
+            ColumnConstraints colPagina =
+                    new ColumnConstraints();
+
+            colPagina.setMinWidth(42);
+
+            colPagina.setHgrow(
+                    Priority.ALWAYS
+            );
+
+            grid.getColumnConstraints()
+                    .add(colPagina);
+
+
+            // R
+            ColumnConstraints colR =
+                    new ColumnConstraints();
+
+            colR.setMinWidth(30);
+
+            colR.setHgrow(
+                    Priority.ALWAYS
+            );
+
+            grid.getColumnConstraints()
+                    .add(colR);
+
+
+            // M
+            ColumnConstraints colM =
+                    new ColumnConstraints();
+
+            colM.setMinWidth(30);
+
+            colM.setHgrow(
+                    Priority.ALWAYS
+            );
+
+            grid.getColumnConstraints()
+                    .add(colM);
+
+
+            columnaActual +=
+                    3;
+        }
+
+
+        // ============================================
+        // FILA 0 - PASOS
+        // ============================================
+
+        agregarCelda(
+                grid,
+                "Paso",
+                0,
+                0,
+                TipoCelda.TITULO
+        );
+
+
+        for (int i = 0;
+             i < pasos.size();
+             i++) {
+
+            PasoNRU paso =
+                    pasos.get(i);
+
+
+            int columnaX =
+                    columnasLimpieza.get(i);
+
+
+            if (columnaX != -1) {
+
+                agregarCelda(
+                        grid,
+                        "X",
+                        columnaX,
+                        0,
+                        TipoCelda.LIMPIEZA
+                );
+            }
+
+
+            int inicio =
+                    columnasPaso.get(i);
+
+
+            /*
+             * 4*
+             *
+             * si ese paso tiene modificación.
+             */
+            String numeroPaso =
+                    String.valueOf(
+                            i + 1
+                    );
+
+
+            if (paso.isModificarM()) {
+
+                numeroPaso +=
+                        "*";
+            }
+
+
+            agregarCeldaSpan(
+                    grid,
+                    numeroPaso,
+                    inicio,
+                    0,
+                    3,
+                    TipoCelda.PASO
+            );
+        }
+
+
+        // ============================================
+        // FILA 1 - PÁGINA / R / M
+        // ============================================
+
+        agregarCelda(
+                grid,
+                "Página",
+                0,
+                1,
+                TipoCelda.TITULO
+        );
+
+
+        for (int i = 0;
+             i < pasos.size();
+             i++) {
+
+            int columnaX =
+                    columnasLimpieza.get(i);
+
+
+            /*
+             * Columna especial:
+             *
+             * X
+             * Limpiar R
+             */
+            if (columnaX != -1) {
+
+                agregarCelda(
+                        grid,
+                        "Limpiar R",
+                        columnaX,
+                        1,
+                        TipoCelda.LIMPIEZA
+                );
+            }
+
+
+            int inicio =
+                    columnasPaso.get(i);
+
+
+            agregarCelda(
+                    grid,
+                    String.valueOf(
+                            referencias.get(i)
+                    ),
+                    inicio,
+                    1,
+                    TipoCelda.PAGINA
+            );
+
+
+            agregarCelda(
+                    grid,
+                    "R",
+                    inicio + 1,
+                    1,
+                    TipoCelda.BIT
+            );
+
+
+            agregarCelda(
+                    grid,
+                    "M",
+                    inicio + 2,
+                    1,
+                    TipoCelda.BIT
+            );
+        }
+
+
+        // ============================================
+        // FILAS DE MARCOS
+        // ============================================
+
+        for (int marco = 0;
+             marco < cantidadMarcos;
+             marco++) {
+
+            int fila =
+                    marco + 2;
+
+
+            agregarCelda(
+                    grid,
+                    "Marco " + (marco + 1),
+                    0,
+                    fila,
+                    TipoCelda.TITULO
+            );
+
+
+            for (int i = 0;
+                 i < pasos.size();
+                 i++) {
+
+                PasoNRU paso =
+                        pasos.get(i);
+
+
+                int columnaX =
+                        columnasLimpieza.get(i);
+
+
+                /*
+                 * Durante X simplemente indicamos
+                 * que las referencias R pasan a 0.
+                 */
+                if (columnaX != -1) {
+
+                    agregarCelda(
+                            grid,
+                            "R=0",
+                            columnaX,
+                            fila,
+                            TipoCelda.LIMPIEZA
+                    );
+                }
+
+
+                int inicio =
+                        columnasPaso.get(i);
+
+
+                String pagina =
+                        "-";
+
+                String bitR =
+                        "-";
+
+                String bitM =
+                        "-";
+
+
+                if (marco
+                        < paso.getMarcos()
+                        .size()) {
+
+                    EstadoPaginaNRU estado =
+                            paso.getMarcos()
+                                    .get(marco);
+
+
+                    pagina =
+                            String.valueOf(
+                                    estado.getPagina()
+                            );
+
+
+                    bitR =
+                            String.valueOf(
+                                    estado.getBitR()
+                            );
+
+
+                    bitM =
+                            String.valueOf(
+                                    estado.getBitM()
+                            );
+                }
+
+
+                agregarCelda(
+                        grid,
+                        pagina,
+                        inicio,
+                        fila,
+                        TipoCelda.MARCO
+                );
+
+
+                agregarCelda(
+                        grid,
+                        bitR,
+                        inicio + 1,
+                        fila,
+                        TipoCelda.BIT
+                );
+
+
+                agregarCelda(
+                        grid,
+                        bitM,
+                        inicio + 2,
+                        fila,
+                        TipoCelda.BIT
+                );
+            }
+        }
+
+
+        // ============================================
+        // RESULTADO
+        // ============================================
+
+        int filaResultado =
+                cantidadMarcos + 2;
+
+
+        agregarCelda(
+                grid,
+                "Resultado",
+                0,
+                filaResultado,
+                TipoCelda.TITULO
+        );
+
+
+        for (int i = 0;
+             i < pasos.size();
+             i++) {
+
+            PasoNRU paso =
+                    pasos.get(i);
+
+
+            int columnaX =
+                    columnasLimpieza.get(i);
+
+
+            if (columnaX != -1) {
+
+                agregarCelda(
+                        grid,
+                        "-",
+                        columnaX,
+                        filaResultado,
+                        TipoCelda.LIMPIEZA
+                );
+            }
+
+
+            int inicio =
+                    columnasPaso.get(i);
+
+
+            agregarCeldaSpan(
+                    grid,
+                    paso.isFalloPagina()
+                            ? "Fallo"
+                            : "Acierto",
+                    inicio,
+                    filaResultado,
+                    3,
+                    paso.isFalloPagina()
+                            ? TipoCelda.FALLO
+                            : TipoCelda.ACIERTO
+            );
+        }
+
+
+        // ============================================
+        // SALE
+        // ============================================
+
+        int filaSale =
+                cantidadMarcos + 3;
+
+
+        agregarCelda(
+                grid,
+                "Sale",
+                0,
+                filaSale,
+                TipoCelda.TITULO
+        );
+
+
+        for (int i = 0;
+             i < pasos.size();
+             i++) {
+
+            PasoNRU paso =
+                    pasos.get(i);
+
+
+            int columnaX =
+                    columnasLimpieza.get(i);
+
+
+            if (columnaX != -1) {
+
+                agregarCelda(
+                        grid,
+                        "-",
+                        columnaX,
+                        filaSale,
+                        TipoCelda.LIMPIEZA
+                );
+            }
+
+
+            int inicio =
+                    columnasPaso.get(i);
+
+
+            String valor =
+                    paso.getPaginaReemplazada()
+                            != null
+
+                            ? String.valueOf(
+                            paso.getPaginaReemplazada()
+                    )
+
+                            : "-";
+
+
+            agregarCeldaSpan(
+                    grid,
+                    valor,
+                    inicio,
+                    filaSale,
+                    3,
+                    paso.getPaginaReemplazada()
+                            != null
+                            ? TipoCelda.DECISION
+                            : TipoCelda.SALE
+            );
+        }
+
+
+        // ============================================
+        // DECISIONES
+        // ============================================
+
+        boolean tieneDecisiones =
+                pasos.stream()
+                        .anyMatch(
+                                paso ->
+                                        paso.getPaginaReemplazada()
+                                                != null
+                                                &&
+                                                paso.getDetalleDecision()
+                                                        != null
+                                                &&
+                                                !paso.getDetalleDecision()
+                                                        .isBlank()
+                        );
+
+
+        if (tieneDecisiones) {
+
+            int filaDecision =
+                    cantidadMarcos + 4;
+
+
+            agregarCelda(
+                    grid,
+                    "Decisión",
+                    0,
+                    filaDecision,
+                    TipoCelda.TITULO
+            );
+
+
+            for (int i = 0;
+                 i < pasos.size();
+                 i++) {
+
+                PasoNRU paso =
+                        pasos.get(i);
+
+
+                int columnaX =
+                        columnasLimpieza.get(i);
+
+
+                if (columnaX != -1) {
+
+                    agregarCelda(
+                            grid,
+                            "-",
+                            columnaX,
+                            filaDecision,
+                            TipoCelda.LIMPIEZA
+                    );
+                }
+
+
+                int inicio =
+                        columnasPaso.get(i);
+
+
+                String detalle =
+                        "-";
+
+
+                if (paso.getPaginaReemplazada()
+                        != null
+                        &&
+                        paso.getDetalleDecision()
+                                != null
+                        &&
+                        !paso.getDetalleDecision()
+                                .isBlank()) {
+
+                    detalle =
+                            paso.getDetalleDecision();
+                }
+
+
+                agregarCeldaDecision(
+                        grid,
+                        detalle,
+                        inicio,
+                        filaDecision,
+                        paso.getPaginaReemplazada()
+                                != null,
+                        3
+                );
+            }
+        }
+
+
+        return grid;
+    }
+
+
+    // =========================================================
+    // CELDA NORMAL
+    // =========================================================
+
     private static void agregarCelda(
             GridPane grid,
             String texto,
@@ -375,64 +1039,10 @@ public class TablaReemplazoBuilder {
             TipoCelda tipo) {
 
         Label label =
-                new Label(texto);
-
-        label.setAlignment(
-                Pos.CENTER
-        );
-
-        label.setMaxWidth(
-                Double.MAX_VALUE
-        );
-
-        label.setMinHeight(32);
-
-
-        String estilo =
-                switch (tipo) {
-
-                    case TITULO, PASO ->
-                            "-fx-background-color: #dce6f2;"
-                                    + "-fx-text-fill: #142744;"
-                                    + "-fx-font-weight: bold;";
-
-                    case PAGINA ->
-                            "-fx-background-color: #9bd955;"
-                                    + "-fx-text-fill: #17320b;"
-                                    + "-fx-font-weight: bold;";
-
-                    case MARCO ->
-                            "-fx-background-color: white;"
-                                    + "-fx-text-fill: #142744;"
-                                    + "-fx-font-weight: bold;";
-
-                    case FALLO ->
-                            "-fx-background-color: #ef5350;"
-                                    + "-fx-text-fill: white;"
-                                    + "-fx-font-weight: bold;";
-
-                    case ACIERTO ->
-                            "-fx-background-color: #49b96f;"
-                                    + "-fx-text-fill: white;"
-                                    + "-fx-font-weight: bold;";
-
-                    case SALE ->
-                            "-fx-background-color: #f1f4f8;"
-                                    + "-fx-text-fill: #142744;";
-
-                    case DECISION ->
-                            "-fx-background-color: #f59e0b;"
-                                    + "-fx-text-fill: white;"
-                                    + "-fx-font-weight: bold;";
-                };
-
-
-        label.setStyle(
-                estilo
-                        + "-fx-border-color: #9daaba;"
-                        + "-fx-border-width: 1;"
-                        + "-fx-font-size: 12px;"
-        );
+                crearLabel(
+                        texto,
+                        tipo
+                );
 
 
         grid.add(
@@ -443,15 +1053,154 @@ public class TablaReemplazoBuilder {
     }
 
 
+    // =========================================================
+    // CELDA QUE OCUPA VARIAS COLUMNAS
+    // =========================================================
+
+    private static void agregarCeldaSpan(
+            GridPane grid,
+            String texto,
+            int columna,
+            int fila,
+            int columnas,
+            TipoCelda tipo) {
+
+        Label label =
+                crearLabel(
+                        texto,
+                        tipo
+                );
+
+
+        grid.add(
+                label,
+                columna,
+                fila,
+                columnas,
+                1
+        );
+    }
+
+
+    // =========================================================
+    // CREACIÓN DEL LABEL
+    // =========================================================
+
+    private static Label crearLabel(
+            String texto,
+            TipoCelda tipo) {
+
+        Label label =
+                new Label(texto);
+
+
+        label.setAlignment(
+                Pos.CENTER
+        );
+
+        label.setMaxWidth(
+                Double.MAX_VALUE
+        );
+
+        label.setMinHeight(
+                32
+        );
+
+
+        String estilo =
+                switch (tipo) {
+
+                    case TITULO, PASO ->
+
+                            "-fx-background-color: #dce6f2;"
+                                    + "-fx-text-fill: #142744;"
+                                    + "-fx-font-weight: bold;";
+
+
+                    case PAGINA ->
+
+                            "-fx-background-color: #9bd955;"
+                                    + "-fx-text-fill: #17320b;"
+                                    + "-fx-font-weight: bold;";
+
+
+                    case BIT ->
+
+                            "-fx-background-color: #eef4ff;"
+                                    + "-fx-text-fill: #315da8;"
+                                    + "-fx-font-weight: bold;";
+
+
+                    case MARCO ->
+
+                            "-fx-background-color: white;"
+                                    + "-fx-text-fill: #142744;"
+                                    + "-fx-font-weight: bold;";
+
+
+                    case FALLO ->
+
+                            "-fx-background-color: #ef5350;"
+                                    + "-fx-text-fill: white;"
+                                    + "-fx-font-weight: bold;";
+
+
+                    case ACIERTO ->
+
+                            "-fx-background-color: #49b96f;"
+                                    + "-fx-text-fill: white;"
+                                    + "-fx-font-weight: bold;";
+
+
+                    case SALE ->
+
+                            "-fx-background-color: #f1f4f8;"
+                                    + "-fx-text-fill: #142744;";
+
+
+                    case DECISION ->
+
+                            "-fx-background-color: #f59e0b;"
+                                    + "-fx-text-fill: white;"
+                                    + "-fx-font-weight: bold;";
+
+
+                    case LIMPIEZA ->
+
+                            "-fx-background-color: #ede9fe;"
+                                    + "-fx-text-fill: #6d28d9;"
+                                    + "-fx-font-weight: bold;";
+                };
+
+
+        label.setStyle(
+                estilo
+                        + "-fx-border-color: #9daaba;"
+                        + "-fx-border-width: 1;"
+                        + "-fx-font-size: 11px;"
+                        + "-fx-padding: 3;"
+        );
+
+
+        return label;
+    }
+
+
+    // =========================================================
+    // DECISIÓN
+    // =========================================================
+
     private static void agregarCeldaDecision(
             GridPane grid,
             String texto,
             int columna,
             int fila,
-            boolean esDecisionReal) {
+            boolean esDecisionReal,
+            int columnas) {
 
         Label label =
                 new Label(texto);
+
 
         label.setAlignment(
                 Pos.CENTER
@@ -465,24 +1214,12 @@ public class TablaReemplazoBuilder {
                 Double.MAX_VALUE
         );
 
-        label.setMinHeight(50);
+        label.setMinHeight(
+                50
+        );
 
 
-        /*
-         * Si no hubo reemplazo,
-         * dejamos la celda muy neutra.
-         */
-        if (!esDecisionReal) {
-
-            label.setStyle(
-                    "-fx-background-color: #f8fafc;"
-                            + "-fx-text-fill: #94a3b8;"
-                            + "-fx-border-color: #d5dce5;"
-                            + "-fx-border-width: 1;"
-                            + "-fx-font-size: 11px;"
-            );
-
-        } else {
+        if (esDecisionReal) {
 
             label.setStyle(
                     "-fx-background-color: #fff7ed;"
@@ -490,8 +1227,18 @@ public class TablaReemplazoBuilder {
                             + "-fx-font-weight: bold;"
                             + "-fx-border-color: #f59e0b;"
                             + "-fx-border-width: 1;"
-                            + "-fx-font-size: 11px;"
+                            + "-fx-font-size: 10px;"
                             + "-fx-padding: 5;"
+            );
+
+        } else {
+
+            label.setStyle(
+                    "-fx-background-color: #f8fafc;"
+                            + "-fx-text-fill: #94a3b8;"
+                            + "-fx-border-color: #d5dce5;"
+                            + "-fx-border-width: 1;"
+                            + "-fx-font-size: 10px;"
             );
         }
 
@@ -499,7 +1246,9 @@ public class TablaReemplazoBuilder {
         grid.add(
                 label,
                 columna,
-                fila
+                fila,
+                columnas,
+                1
         );
     }
 }
