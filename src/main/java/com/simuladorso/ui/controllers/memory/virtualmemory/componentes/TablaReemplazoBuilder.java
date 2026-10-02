@@ -14,6 +14,10 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 
+import com.simuladorso.memory.algoritmos.secondchance.EstadoPaginaSecondChance;
+import com.simuladorso.memory.algoritmos.secondchance.PasoSecondChance;
+import com.simuladorso.memory.algoritmos.secondchance.ResultadoSecondChance;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -1250,5 +1254,425 @@ public class TablaReemplazoBuilder {
                 columnas,
                 1
         );
+    }
+
+
+    public static GridPane crearTablaSecondChance(
+            List<Integer> referencias,
+            int cantidadMarcos,
+            ResultadoSecondChance resultado) {
+
+        GridPane grid =
+                new GridPane();
+
+        grid.setHgap(2);
+        grid.setVgap(2);
+
+        grid.setMaxWidth(
+                Double.MAX_VALUE
+        );
+
+        HBox.setHgrow(
+                grid,
+                Priority.ALWAYS
+        );
+
+        grid.setStyle(
+                "-fx-background-color: #cfd8e3;"
+                        + "-fx-padding: 2;"
+        );
+
+
+        List<PasoSecondChance> pasos =
+                resultado.getPasos();
+
+
+        // ============================================
+        // COLUMNA DE TÍTULOS
+        // ============================================
+
+        ColumnConstraints colTitulo =
+                new ColumnConstraints();
+
+        colTitulo.setMinWidth(85);
+        colTitulo.setPrefWidth(95);
+
+        colTitulo.setHgrow(
+                Priority.NEVER
+        );
+
+        grid.getColumnConstraints()
+                .add(colTitulo);
+
+
+        /*
+         * Cada referencia ocupa:
+         *
+         * Página | R
+         */
+        for (int i = 0;
+             i < referencias.size();
+             i++) {
+
+            ColumnConstraints colPagina =
+                    new ColumnConstraints();
+
+            colPagina.setMinWidth(45);
+            colPagina.setHgrow(
+                    Priority.ALWAYS
+            );
+
+
+            ColumnConstraints colR =
+                    new ColumnConstraints();
+
+            colR.setMinWidth(35);
+            colR.setHgrow(
+                    Priority.ALWAYS
+            );
+
+
+            grid.getColumnConstraints()
+                    .addAll(
+                            colPagina,
+                            colR
+                    );
+        }
+
+
+        // ============================================
+        // PASO
+        // ============================================
+
+        agregarCelda(
+                grid,
+                "Paso",
+                0,
+                0,
+                TipoCelda.TITULO
+        );
+
+
+        for (int i = 0;
+             i < pasos.size();
+             i++) {
+
+            int inicio =
+                    1 + (i * 2);
+
+
+            agregarCeldaSpan(
+                    grid,
+                    String.valueOf(
+                            i + 1
+                    ),
+                    inicio,
+                    0,
+                    2,
+                    TipoCelda.PASO
+            );
+        }
+
+
+        // ============================================
+        // PÁGINA / R
+        // ============================================
+
+        agregarCelda(
+                grid,
+                "Página",
+                0,
+                1,
+                TipoCelda.TITULO
+        );
+
+
+        for (int i = 0;
+             i < pasos.size();
+             i++) {
+
+            int inicio =
+                    1 + (i * 2);
+
+
+            agregarCelda(
+                    grid,
+                    String.valueOf(
+                            referencias.get(i)
+                    ),
+                    inicio,
+                    1,
+                    TipoCelda.PAGINA
+            );
+
+
+            agregarCelda(
+                    grid,
+                    "R",
+                    inicio + 1,
+                    1,
+                    TipoCelda.BIT
+            );
+        }
+
+
+        // ============================================
+        // MARCOS
+        // ============================================
+
+        for (int marco = 0;
+             marco < cantidadMarcos;
+             marco++) {
+
+            int fila =
+                    marco + 2;
+
+
+            agregarCelda(
+                    grid,
+                    "Marco " + (marco + 1),
+                    0,
+                    fila,
+                    TipoCelda.TITULO
+            );
+
+
+            for (int columna = 0;
+                 columna < pasos.size();
+                 columna++) {
+
+                PasoSecondChance paso =
+                        pasos.get(columna);
+
+
+                int inicio =
+                        1 + (columna * 2);
+
+
+                String pagina =
+                        "-";
+
+                String bitR =
+                        "-";
+
+
+                if (marco
+                        < paso.getMarcos()
+                        .size()) {
+
+                    EstadoPaginaSecondChance estado =
+                            paso.getMarcos()
+                                    .get(marco);
+
+
+                    pagina =
+                            String.valueOf(
+                                    estado.getPagina()
+                            );
+
+
+                    bitR =
+                            String.valueOf(
+                                    estado.getBitR()
+                            );
+                }
+
+
+                agregarCelda(
+                        grid,
+                        pagina,
+                        inicio,
+                        fila,
+                        TipoCelda.MARCO
+                );
+
+
+                agregarCelda(
+                        grid,
+                        bitR,
+                        inicio + 1,
+                        fila,
+                        TipoCelda.BIT
+                );
+            }
+        }
+
+
+        // ============================================
+        // RESULTADO
+        // ============================================
+
+        int filaResultado =
+                cantidadMarcos + 2;
+
+
+        agregarCelda(
+                grid,
+                "Resultado",
+                0,
+                filaResultado,
+                TipoCelda.TITULO
+        );
+
+
+        for (int i = 0;
+             i < pasos.size();
+             i++) {
+
+            PasoSecondChance paso =
+                    pasos.get(i);
+
+
+            int inicio =
+                    1 + (i * 2);
+
+
+            agregarCeldaSpan(
+                    grid,
+                    paso.isFalloPagina()
+                            ? "Fallo"
+                            : "Acierto",
+                    inicio,
+                    filaResultado,
+                    2,
+                    paso.isFalloPagina()
+                            ? TipoCelda.FALLO
+                            : TipoCelda.ACIERTO
+            );
+        }
+
+
+        // ============================================
+        // SALE
+        // ============================================
+
+        int filaSale =
+                cantidadMarcos + 3;
+
+
+        agregarCelda(
+                grid,
+                "Sale",
+                0,
+                filaSale,
+                TipoCelda.TITULO
+        );
+
+
+        for (int i = 0;
+             i < pasos.size();
+             i++) {
+
+            PasoSecondChance paso =
+                    pasos.get(i);
+
+
+            int inicio =
+                    1 + (i * 2);
+
+
+            String valor =
+                    paso.getPaginaReemplazada()
+                            != null
+
+                            ? String.valueOf(
+                            paso.getPaginaReemplazada()
+                    )
+
+                            : "-";
+
+
+            agregarCeldaSpan(
+                    grid,
+                    valor,
+                    inicio,
+                    filaSale,
+                    2,
+                    paso.getPaginaReemplazada()
+                            != null
+                            ? TipoCelda.DECISION
+                            : TipoCelda.SALE
+            );
+        }
+
+
+        // ============================================
+        // DECISIÓN
+        // ============================================
+
+        boolean tieneDecisiones =
+                pasos.stream()
+                        .anyMatch(
+                                paso ->
+                                        paso.getPaginaReemplazada()
+                                                != null
+                                                &&
+                                                paso.getDetalleDecision()
+                                                        != null
+                                                &&
+                                                !paso.getDetalleDecision()
+                                                        .isBlank()
+                        );
+
+
+        if (tieneDecisiones) {
+
+            int filaDecision =
+                    cantidadMarcos + 4;
+
+
+            agregarCelda(
+                    grid,
+                    "Decisión",
+                    0,
+                    filaDecision,
+                    TipoCelda.TITULO
+            );
+
+
+            for (int i = 0;
+                 i < pasos.size();
+                 i++) {
+
+                PasoSecondChance paso =
+                        pasos.get(i);
+
+
+                int inicio =
+                        1 + (i * 2);
+
+
+                String detalle =
+                        "-";
+
+
+                if (paso.getPaginaReemplazada()
+                        != null
+                        &&
+                        paso.getDetalleDecision()
+                                != null
+                        &&
+                        !paso.getDetalleDecision()
+                                .isBlank()) {
+
+                    detalle =
+                            paso.getDetalleDecision();
+                }
+
+
+                agregarCeldaDecision(
+                        grid,
+                        detalle,
+                        inicio,
+                        filaDecision,
+                        paso.getPaginaReemplazada()
+                                != null,
+                        2
+                );
+            }
+        }
+
+
+        return grid;
     }
 }
