@@ -3,190 +3,175 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.layout.Region?>
 
-<VBox xmlns="http://javafx.com/javafx/21"
-      xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="com.simuladorso.ui.controllers.memory.MemoryController"
-      spacing="20"
-      alignment="TOP_CENTER"
-      styleClass="content-container">
+<ScrollPane fitToWidth="true"
+            fitToHeight="true"
+            hbarPolicy="NEVER"
+            vbarPolicy="AS_NEEDED"
+            styleClass="gantt-scroll"
+            xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.simuladorso.ui.controllers.memory.MemoryController">
 
-    <padding>
-        <Insets top="25" right="30" bottom="25" left="30"/>
-    </padding>
+    <content>
+        <VBox spacing="16" alignment="TOP_CENTER" styleClass="content-container">
+            <padding>
+                <Insets top="16" right="24" bottom="20" left="24"/>
+            </padding>
 
-    <!-- ENCABEZADO -->
-    <VBox spacing="5" alignment="CENTER">
-        <Label text="Gestión de Memoria" styleClass="page-title" style="-fx-font-size: 24px;"/>
-    </VBox>
+            <!-- ENCABEZADO Y BOTONES PRINCIPALES DEL MENÚ -->
+            <VBox fx:id="headerContainer" spacing="12" alignment="TOP_CENTER" maxWidth="1000">
+                <Label text="Gestión de Memoria" styleClass="page-title"/>
+                <Separator maxWidth="Infinity"/>
 
-    <Separator maxWidth="850"/>
+                <HBox fx:id="mainButtonsContainer" alignment="CENTER" spacing="20">
+                    <Button fx:id="btnMultiprogramming"
+                            text="Multiprogramación"
+                            onAction="#showMultiprogramming"
+                            prefHeight="40"
+                            prefWidth="220"
+                            styleClass="button-primary"/>
 
-    <!-- CONTENEDOR DE TRANSICIÓN: BOTONES PRINCIPALES VS BOTÓN CERRAR -->
-    <StackPane maxWidth="850">
+                    <Button fx:id="btnVirtualMemory"
+                            text="Memoria Virtual"
+                            onAction="#showVirtualMemory"
+                            prefHeight="40"
+                            prefWidth="220"
+                            styleClass="button-primary"/>
+                </HBox>
+            </VBox>
 
-        <!-- BOTONES TABS (Se ocultan al abrir un módulo) -->
-        <HBox fx:id="mainButtonsContainer" alignment="CENTER" spacing="25">
-            <Button fx:id="btnMultiprogramming"
-                    text="Multiprogramación"
-                    onAction="#showMultiprogramming"
-                    prefHeight="45"
-                    prefWidth="240"
-                    styleClass="button-primary"/>
-
-            <Button fx:id="btnVirtualMemory"
-                    text="Memoria Virtual"
-                    onAction="#showVirtualMemory"
-                    prefHeight="45"
-                    prefWidth="240"
-                    styleClass="button-primary"/>
-        </HBox>
-
-        <!-- BOTÓN CERRAR MÓDULO (Aparece al abrir un módulo) -->
-        <Button fx:id="btnCloseModule"
-                text="✕  Cerrar Módulo y Volver"
-                onAction="#handleCloseModule"
-                prefHeight="45"
-                prefWidth="240"
-                visible="false"
-                managed="false"
-                styleClass="button-secondary"/>
-    </StackPane>
-
-    <!-- ÁREA DE SUB-OPCIONES -->
-    <StackPane fx:id="subOptionsArea" maxWidth="850">
-
-        <!-- PANEL: MULTIPROGRAMACIÓN -->
-        <VBox fx:id="optsMultiprogramming" spacing="15" alignment="TOP_CENTER">
-
-            <Label text="Seleccione un modelo de asignación contigua" styleClass="muted" style="-fx-font-size: 14px;"/>
-
-            <!-- 1. MAPA DE BITS -->
-            <HBox alignment="CENTER_LEFT" styleClass="card" prefHeight="65" maxWidth="750">
-                <padding>
-                    <Insets top="12" right="20" bottom="12" left="20"/>
-                </padding>
-                <VBox spacing="4" HBox.hgrow="ALWAYS">
-                    <Label text="Mapa de Bits" styleClass="card-title" style="-fx-font-size: 15px;"/>
-                    <Label text="Gestión de memoria mediante bloques discretos (0 y 1)." styleClass="muted"/>
+            <!-- BARRA SUPERIOR COMPACTA AL ABRIR UN MÓDULO (OCULTA EN EL MENÚ) -->
+            <HBox fx:id="moduleHeaderBar" alignment="CENTER_LEFT" spacing="16" maxWidth="Infinity" visible="false" managed="false">
+                <VBox spacing="2" HBox.hgrow="ALWAYS">
+                    <Label fx:id="lblModuleTitle" text="Mapa de Bits" styleClass="page-title" style="-fx-font-size: 22px;"/>
+                    <Label text="Simulación de asignación contigua en memoria principal" styleClass="muted"/>
                 </VBox>
-                <Region prefWidth="20"/>
-                <Button text="Abrir Módulo" onAction="#handleOpenBitMap" prefHeight="38" prefWidth="130" styleClass="button-secondary"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button fx:id="btnCloseModule"
+                        text="✕  Cerrar Módulo"
+                        onAction="#handleCloseModule"
+                        prefHeight="36"
+                        styleClass="button-secondary"/>
             </HBox>
 
-            <!-- 2. LISTAS LIGADAS -->
-            <HBox alignment="CENTER_LEFT" styleClass="card" prefHeight="65" maxWidth="750">
-                <padding>
-                    <Insets top="12" right="20" bottom="12" left="20"/>
-                </padding>
-                <VBox spacing="4" HBox.hgrow="ALWAYS">
-                    <Label text="Listas Ligadas" styleClass="card-title" style="-fx-font-size: 15px;"/>
-                    <Label text="Asignación mediante particiones dinámicas y nodos enlazados." styleClass="muted"/>
-                </VBox>
-                <Region prefWidth="20"/>
-                <Button text="Abrir Módulo" onAction="#handleOpenLinkedList" prefHeight="38" prefWidth="130" styleClass="button-secondary"/>
-            </HBox>
+            <!-- ÁREA DE OPCIONES DEL MENÚ PRINCIPAL -->
+            <StackPane fx:id="subOptionsArea" maxWidth="1000">
 
-            <!-- 3. SISTEMAS ASOCIADOS (BUDDY SYSTEM) -->
-            <HBox alignment="CENTER_LEFT" styleClass="card" prefHeight="65" maxWidth="750">
-                <padding>
-                    <Insets top="12" right="20" bottom="12" left="20"/>
-                </padding>
-                <VBox spacing="4" HBox.hgrow="ALWAYS">
-                    <Label text="Sistemas Asociados (Buddy System)" styleClass="card-title" style="-fx-font-size: 15px;"/>
-                    <Label text="División y coalescencia de bloques en potencias de 2." styleClass="muted"/>
+                <!-- MULTIPROGRAMACIÓN -->
+                <VBox fx:id="optsMultiprogramming" spacing="12" alignment="TOP_CENTER">
+                    <Label text="Seleccione un modelo de asignación contigua" styleClass="muted"/>
+
+                    <HBox alignment="CENTER_LEFT" styleClass="card" prefHeight="60" maxWidth="Infinity">
+                        <padding><Insets top="10" right="20" bottom="10" left="20"/></padding>
+                        <VBox spacing="2" HBox.hgrow="ALWAYS">
+                            <Label text="Mapa de Bits" styleClass="card-title"/>
+                            <Label text="Gestión de memoria mediante bloques discretos (0 y 1)." styleClass="muted"/>
+                        </VBox>
+                        <Region prefWidth="20"/>
+                        <Button text="Abrir Módulo" onAction="#handleOpenBitMap" prefHeight="35" prefWidth="130" styleClass="button-secondary"/>
+                    </HBox>
+
+                    <HBox alignment="CENTER_LEFT" styleClass="card" prefHeight="60" maxWidth="Infinity">
+                        <padding><Insets top="10" right="20" bottom="10" left="20"/></padding>
+                        <VBox spacing="2" HBox.hgrow="ALWAYS">
+                            <Label text="Listas Ligadas" styleClass="card-title"/>
+                            <Label text="Asignación mediante particiones dinámicas y nodos enlazados." styleClass="muted"/>
+                        </VBox>
+                        <Region prefWidth="20"/>
+                        <Button text="Abrir Módulo" onAction="#handleOpenLinkedList" prefHeight="35" prefWidth="130" styleClass="button-secondary"/>
+                    </HBox>
+
+                    <HBox alignment="CENTER_LEFT" styleClass="card" prefHeight="60" maxWidth="Infinity">
+                        <padding><Insets top="10" right="20" bottom="10" left="20"/></padding>
+                        <VBox spacing="2" HBox.hgrow="ALWAYS">
+                            <Label text="Sistemas Asociados (Buddy System)" styleClass="card-title"/>
+                            <Label text="División y coalescencia de bloques en potencias de 2." styleClass="muted"/>
+                        </VBox>
+                        <Region prefWidth="20"/>
+                        <Button text="Abrir Módulo" onAction="#handleOpenBuddySystem" prefHeight="35" prefWidth="130" styleClass="button-secondary"/>
+                    </HBox>
                 </VBox>
-                <Region prefWidth="20"/>
-                <Button text="Abrir Módulo" onAction="#handleOpenBuddySystem" prefHeight="38" prefWidth="130" styleClass="button-secondary"/>
-            </HBox>
+
+                <!-- MEMORIA VIRTUAL -->
+                <VBox fx:id="optsVirtualMemory" spacing="12" alignment="TOP_CENTER" visible="false" managed="false">
+                    <Label text="Algoritmos de reemplazo de páginas" styleClass="muted"/>
+
+                    <HBox alignment="CENTER_LEFT" styleClass="card" prefHeight="60" maxWidth="Infinity">
+                        <padding><Insets top="10" right="20" bottom="10" left="20"/></padding>
+                        <VBox spacing="2" HBox.hgrow="ALWAYS">
+                            <Label text="Algoritmo de Reemplazo Base" styleClass="card-title"/>
+                            <Label text="Simulación estándar de marcos de página." styleClass="muted"/>
+                        </VBox>
+                        <Button text="Abrir Módulo" onAction="#handleOpenPageReplacement" prefHeight="35" prefWidth="130" styleClass="button-secondary"/>
+                    </HBox>
+
+                    <HBox alignment="CENTER_LEFT" styleClass="card" prefHeight="60" maxWidth="Infinity">
+                        <padding><Insets top="10" right="20" bottom="10" left="20"/></padding>
+                        <VBox spacing="2" HBox.hgrow="ALWAYS">
+                            <Label text="Algoritmo Óptimo" styleClass="card-title"/>
+                            <Label text="Reemplazo teórico basado en referencias futuras." styleClass="muted"/>
+                        </VBox>
+                        <Button text="Abrir Módulo" onAction="#handleOpenOptimal" prefHeight="35" prefWidth="130" styleClass="button-secondary"/>
+                    </HBox>
+
+                    <HBox alignment="CENTER_LEFT" styleClass="card" prefHeight="60" maxWidth="Infinity">
+                        <padding><Insets top="10" right="20" bottom="10" left="20"/></padding>
+                        <VBox spacing="2" HBox.hgrow="ALWAYS">
+                            <Label text="Uso No Tan Reciente (NRU)" styleClass="card-title"/>
+                            <Label text="Clasificación basada en bits R y M." styleClass="muted"/>
+                        </VBox>
+                        <Button text="Abrir Módulo" onAction="#handleOpenNru" prefHeight="35" prefWidth="130" styleClass="button-secondary"/>
+                    </HBox>
+
+                    <HBox alignment="CENTER_LEFT" styleClass="card" prefHeight="60" maxWidth="Infinity">
+                        <padding><Insets top="10" right="20" bottom="10" left="20"/></padding>
+                        <VBox spacing="2" HBox.hgrow="ALWAYS">
+                            <Label text="Primero en Entrar, Primero en Salir (FIFO)" styleClass="card-title"/>
+                            <Label text="Expulsión por orden estricto de llegada." styleClass="muted"/>
+                        </VBox>
+                        <Button text="Abrir Módulo" onAction="#handleOpenFifo" prefHeight="35" prefWidth="130" styleClass="button-secondary"/>
+                    </HBox>
+
+                    <HBox alignment="CENTER_LEFT" styleClass="card" prefHeight="60" maxWidth="Infinity">
+                        <padding><Insets top="10" right="20" bottom="10" left="20"/></padding>
+                        <VBox spacing="2" HBox.hgrow="ALWAYS">
+                            <Label text="Segunda Oportunidad" styleClass="card-title"/>
+                            <Label text="FIFO inspeccionando el bit de referencia R." styleClass="muted"/>
+                        </VBox>
+                        <Button text="Abrir Módulo" onAction="#handleOpenSecondChance" prefHeight="35" prefWidth="130" styleClass="button-secondary"/>
+                    </HBox>
+
+                    <HBox alignment="CENTER_LEFT" styleClass="card" prefHeight="60" maxWidth="Infinity">
+                        <padding><Insets top="10" right="20" bottom="10" left="20"/></padding>
+                        <VBox spacing="2" HBox.hgrow="ALWAYS">
+                            <Label text="Página de Reloj (Clock)" styleClass="card-title"/>
+                            <Label text="Implementación circular del algoritmo de segunda oportunidad." styleClass="muted"/>
+                        </VBox>
+                        <Button text="Abrir Módulo" onAction="#handleOpenClock" prefHeight="35" prefWidth="130" styleClass="button-secondary"/>
+                    </HBox>
+
+                    <HBox alignment="CENTER_LEFT" styleClass="card" prefHeight="60" maxWidth="Infinity">
+                        <padding><Insets top="10" right="20" bottom="10" left="20"/></padding>
+                        <VBox spacing="2" HBox.hgrow="ALWAYS">
+                            <Label text="Menor Uso Reciente (LRU)" styleClass="card-title"/>
+                            <Label text="Expulsión de la página no usada durante más tiempo." styleClass="muted"/>
+                        </VBox>
+                        <Button text="Abrir Módulo" onAction="#handleOpenLru" prefHeight="35" prefWidth="130" styleClass="button-secondary"/>
+                    </HBox>
+                </VBox>
+            </StackPane>
+
+            <!-- ÁREA DINÁMICA DEL MÓDULO -->
+            <VBox fx:id="contentContainer" alignment="TOP_CENTER" maxWidth="Infinity" VBox.vgrow="ALWAYS">
+                <StackPane fx:id="contentArea" maxWidth="Infinity"/>
+            </VBox>
         </VBox>
-
-        <!-- PANEL: MEMORIA VIRTUAL -->
-        <VBox fx:id="optsVirtualMemory" spacing="12" alignment="TOP_CENTER" visible="false" managed="false">
-
-            <Label text="Algoritmos de reemplazo de páginas" styleClass="muted" style="-fx-font-size: 14px;"/>
-
-            <!-- 1. ALGORITMO GENERAL -->
-            <HBox alignment="CENTER_LEFT" styleClass="card" prefHeight="60" maxWidth="750">
-                <padding><Insets top="10" right="20" bottom="10" left="20"/></padding>
-                <VBox spacing="2" HBox.hgrow="ALWAYS">
-                    <Label text="Algoritmo de Reemplazo Base" styleClass="card-title"/>
-                    <Label text="Simulación estándar de marcos de página." styleClass="muted"/>
-                </VBox>
-                <Button text="Abrir Módulo" onAction="#handleOpenPageReplacement" prefHeight="35" prefWidth="130" styleClass="button-secondary"/>
-            </HBox>
-
-            <!-- 2. ÓPTIMO -->
-            <HBox alignment="CENTER_LEFT" styleClass="card" prefHeight="60" maxWidth="750">
-                <padding><Insets top="10" right="20" bottom="10" left="20"/></padding>
-                <VBox spacing="2" HBox.hgrow="ALWAYS">
-                    <Label text="Algoritmo Óptimo" styleClass="card-title"/>
-                    <Label text="Reemplazo teórico basado en las referencias futuras." styleClass="muted"/>
-                </VBox>
-                <Button text="Abrir Módulo" onAction="#handleOpenOptimal" prefHeight="35" prefWidth="130" styleClass="button-secondary"/>
-            </HBox>
-
-            <!-- 3. NRU -->
-            <HBox alignment="CENTER_LEFT" styleClass="card" prefHeight="60" maxWidth="750">
-                <padding><Insets top="10" right="20" bottom="10" left="20"/></padding>
-                <VBox spacing="2" HBox.hgrow="ALWAYS">
-                    <Label text="Uso No Tan Reciente (NRU)" styleClass="card-title"/>
-                    <Label text="Clasificación basada en bits de Referencia (R) y Modificación (M)." styleClass="muted"/>
-                </VBox>
-                <Button text="Abrir Módulo" onAction="#handleOpenNru" prefHeight="35" prefWidth="130" styleClass="button-secondary"/>
-            </HBox>
-
-            <!-- 4. FIFO -->
-            <HBox alignment="CENTER_LEFT" styleClass="card" prefHeight="60" maxWidth="750">
-                <padding><Insets top="10" right="20" bottom="10" left="20"/></padding>
-                <VBox spacing="2" HBox.hgrow="ALWAYS">
-                    <Label text="Primero en Entrar, Primero en Salir (FIFO)" styleClass="card-title"/>
-                    <Label text="Expulsión basada estrictamente en el orden de llegada." styleClass="muted"/>
-                </VBox>
-                <Button text="Abrir Módulo" onAction="#handleOpenFifo" prefHeight="35" prefWidth="130" styleClass="button-secondary"/>
-            </HBox>
-
-            <!-- 5. SEGUNDA OPORTUNIDAD -->
-            <HBox alignment="CENTER_LEFT" styleClass="card" prefHeight="60" maxWidth="750">
-                <padding><Insets top="10" right="20" bottom="10" left="20"/></padding>
-                <VBox spacing="2" HBox.hgrow="ALWAYS">
-                    <Label text="Segunda Oportunidad" styleClass="card-title"/>
-                    <Label text="Variación de FIFO que inspecciona el bit de referencia antes de expulsar." styleClass="muted"/>
-                </VBox>
-                <Button text="Abrir Módulo" onAction="#handleOpenSecondChance" prefHeight="35" prefWidth="130" styleClass="button-secondary"/>
-            </HBox>
-
-            <!-- 6. RELOJ -->
-            <HBox alignment="CENTER_LEFT" styleClass="card" prefHeight="60" maxWidth="750">
-                <padding><Insets top="10" right="20" bottom="10" left="20"/></padding>
-                <VBox spacing="2" HBox.hgrow="ALWAYS">
-                    <Label text="Página de Reloj (Clock)" styleClass="card-title"/>
-                    <Label text="Implementación circular del algoritmo de segunda oportunidad." styleClass="muted"/>
-                </VBox>
-                <Button text="Abrir Módulo" onAction="#handleOpenClock" prefHeight="35" prefWidth="130" styleClass="button-secondary"/>
-            </HBox>
-
-            <!-- 7. LRU -->
-            <HBox alignment="CENTER_LEFT" styleClass="card" prefHeight="60" maxWidth="750">
-                <padding><Insets top="10" right="20" bottom="10" left="20"/></padding>
-                <VBox spacing="2" HBox.hgrow="ALWAYS">
-                    <Label text="Menor Uso Reciente (LRU)" styleClass="card-title"/>
-                    <Label text="Expulsión de la página que no ha sido usada por más tiempo." styleClass="muted"/>
-                </VBox>
-                <Button text="Abrir Módulo" onAction="#handleOpenLru" prefHeight="35" prefWidth="130" styleClass="button-secondary"/>
-            </HBox>
-
-        </VBox>
-    </StackPane>
-
-    <!-- ÁREA CENTRAL DONDE SE CARGA EL MÓDULO -->
-    <VBox fx:id="contentContainer" alignment="TOP_CENTER" maxWidth="1000" VBox.vgrow="ALWAYS">
-        <StackPane fx:id="contentArea" maxWidth="1000"/>
-    </VBox>
-
-</VBox>
+    </content>
+</ScrollPane>

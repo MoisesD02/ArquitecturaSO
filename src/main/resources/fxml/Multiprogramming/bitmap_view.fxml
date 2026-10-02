@@ -12,129 +12,132 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox xmlns="http://javafx.com/javafx/21"
-      xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="com.simuladorso.ui.controllers.memory.multiprogramming.BitMapController"
-      fx:id="root" spacing="14" alignment="TOP_CENTER" styleClass="card" maxWidth="1000">
+<ScrollPane fitToWidth="true"
+            fitToHeight="true"
+            hbarPolicy="NEVER"
+            vbarPolicy="AS_NEEDED"
+            styleClass="gantt-scroll"
+            xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.simuladorso.ui.controllers.memory.multiprogramming.BitMapController">
 
-    <padding>
-        <Insets top="16" right="20" bottom="16" left="20"/>
-    </padding>
+    <content>
+        <VBox fx:id="root" spacing="12" alignment="TOP_CENTER" styleClass="card" maxWidth="Infinity">
+            <padding>
+                <Insets top="12" right="20" bottom="16" left="20"/>
+            </padding>
 
-    <!-- CABECERA PRINCIPAL CON MENSAJE INTEGRADO -->
-    <HBox alignment="CENTER_LEFT" spacing="20" maxWidth="960">
-        <VBox spacing="2">
-            <Label text="Mapa de Bits" styleClass="card-title" style="-fx-font-size: 20px;"/>
-            <Label text="Memoria dividida entre el tamaño de unidad para generar el arreglo de bits." styleClass="muted"/>
+            <!-- BARRA DE CONFIGURACIÓN SUPERIOR (APROVECHA EL ALTO GANADO) -->
+            <HBox spacing="15" alignment="CENTER_LEFT" styleClass="card, compact-card" maxWidth="Infinity">
+                <HBox spacing="8" alignment="CENTER_LEFT">
+                    <Label text="Memoria Total (KB):" styleClass="muted"/>
+                    <TextField fx:id="txtTotalMemory" text="1024" promptText="1000" prefWidth="110" prefHeight="32"/>
+                </HBox>
+
+                <HBox spacing="8" alignment="CENTER_LEFT">
+                    <Label text="Tamaño Unidad (KB):" styleClass="muted"/>
+                    <TextField fx:id="txtUnitSize" text="4" promptText="4" prefWidth="90" prefHeight="32"/>
+                </HBox>
+
+                <Button text="Aplicar Configuración" onAction="#handleApplyConfig" prefHeight="32" styleClass="button-primary"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label fx:id="lblMessage" wrapText="true" styleClass="form-message"/>
+            </HBox>
+
+            <!-- CONTENEDOR PRINCIPAL DE LA SIMULACIÓN -->
+            <VBox fx:id="mapContainer" spacing="12" alignment="TOP_CENTER" visible="false" managed="false" VBox.vgrow="ALWAYS" maxWidth="Infinity">
+
+                <!-- MÉTRICAS Y LEYENDA -->
+                <HBox spacing="12" alignment="CENTER" maxWidth="Infinity">
+                    <HBox spacing="8" alignment="CENTER" styleClass="card" HBox.hgrow="ALWAYS" prefHeight="42">
+                        <Label text="TOTAL:" styleClass="muted"/>
+                        <Label fx:id="lblTotal" text="0 KB" styleClass="value"/>
+                    </HBox>
+                    <HBox spacing="8" alignment="CENTER" styleClass="card" HBox.hgrow="ALWAYS" prefHeight="42">
+                        <Label text="USADA:" styleClass="muted"/>
+                        <Label fx:id="lblUsed" text="0 KB" styleClass="value"/>
+                    </HBox>
+                    <HBox spacing="8" alignment="CENTER" styleClass="card" HBox.hgrow="ALWAYS" prefHeight="42">
+                        <Label text="LIBRE:" styleClass="muted"/>
+                        <Label fx:id="lblFree" text="0 KB" styleClass="value"/>
+                    </HBox>
+                    <HBox spacing="8" alignment="CENTER" styleClass="card" HBox.hgrow="ALWAYS" prefHeight="42">
+                        <Label text="SOBRANTE:" styleClass="muted"/>
+                        <Label fx:id="lblWaste" text="0 KB" styleClass="value"/>
+                    </HBox>
+
+                    <!-- LEYENDA CUADRADA -->
+                    <HBox spacing="16" alignment="CENTER" styleClass="card, compact-card" prefHeight="42" style="-fx-padding: 0 16;">
+                        <HBox spacing="8" alignment="CENTER">
+                            <Region fx:id="regLegendFree" minWidth="16" prefWidth="16" maxWidth="16" minHeight="16" prefHeight="16" maxHeight="16"
+                                    style="-fx-background-color: #2563eb; -fx-border-color: #1d4ed8; -fx-background-radius: 3; -fx-border-radius: 3;"/>
+                            <Label text="Bloque Libre" styleClass="value"/>
+                        </HBox>
+                        <HBox spacing="8" alignment="CENTER">
+                            <Region minWidth="16" prefWidth="16" maxWidth="16" minHeight="16" prefHeight="16" maxHeight="16"
+                                    style="-fx-background-color: #16a34a; -fx-border-color: #15803d; -fx-background-radius: 3; -fx-border-radius: 3;"/>
+                            <Label text="Bloque Ocupado" styleClass="value"/>
+                        </HBox>
+                    </HBox>
+                </HBox>
+
+                <!-- RECUADRO DE CELDAS CON CANVAS -->
+                <ScrollPane fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" prefHeight="260" maxWidth="Infinity" styleClass="gantt-scroll">
+                    <content>
+                        <VBox fx:id="canvasContainer" alignment="CENTER" style="-fx-padding: 8;">
+                            <Canvas fx:id="mapCanvas"/>
+                        </VBox>
+                    </content>
+                </ScrollPane>
+
+                <Label fx:id="lblDetail" text="Pasa el cursor por una celda para inspeccionarla." styleClass="muted"/>
+
+                <!-- SECCIÓN INFERIOR DIVIDIDA -->
+                <HBox spacing="14" maxWidth="Infinity" VBox.vgrow="ALWAYS">
+
+                    <!-- FORMULARIO IZQUIERDA -->
+                    <VBox spacing="10" styleClass="card" prefWidth="280" minWidth="260">
+                        <Label text="NUEVO PROCESO" styleClass="card-title"/>
+
+                        <VBox spacing="4">
+                            <Label text="Nombre del Proceso" styleClass="muted"/>
+                            <TextField fx:id="txtProcessName" promptText="Ej. DDD1" prefHeight="32"/>
+                        </VBox>
+
+                        <VBox spacing="4">
+                            <Label text="Tamaño Requerido (KB)" styleClass="muted"/>
+                            <TextField fx:id="txtProcessSize" promptText="Ej. 51" prefHeight="32"/>
+                        </VBox>
+
+                        <Region VBox.vgrow="ALWAYS"/>
+
+                        <Button text="+ Asignar Proceso" onAction="#handleAddProcess" maxWidth="Infinity" prefHeight="36" styleClass="button-primary"/>
+                        <Button text="↻ Reiniciar Mapa" onAction="#handleResetMemory" maxWidth="Infinity" prefHeight="32" styleClass="button-secondary"/>
+                    </VBox>
+
+                    <!-- TABLA DERECHA RESPONSIVA -->
+                    <VBox spacing="10" styleClass="card" HBox.hgrow="ALWAYS">
+                        <Label text="PROCESOS EN MEMORIA" styleClass="card-title"/>
+
+                        <TableView fx:id="tblProcesses" VBox.vgrow="ALWAYS" prefHeight="180">
+                            <columnResizePolicy>
+                                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+                            </columnResizePolicy>
+                            <columns>
+                                <TableColumn fx:id="colName" text="Proceso"/>
+                                <TableColumn fx:id="colRequested" text="Solicitado"/>
+                                <TableColumn fx:id="colAssigned" text="Asignado"/>
+                                <TableColumn fx:id="colCells" text="Rango Celdas"/>
+                                <TableColumn fx:id="colWaste" text="Sobrante"/>
+                                <TableColumn fx:id="colAction" text="Acción"/>
+                            </columns>
+                        </TableView>
+                    </VBox>
+
+                </HBox>
+
+            </VBox>
+
         </VBox>
-        <Region HBox.hgrow="ALWAYS"/>
-        <Label fx:id="lblMessage" wrapText="true" styleClass="form-message" alignment="CENTER_RIGHT"/>
-    </HBox>
-
-    <!-- FORMULARIO DE INGRESO SUPERIOR -->
-    <HBox spacing="15" alignment="CENTER" styleClass="card, compact-card" maxWidth="960">
-        <HBox spacing="10" alignment="CENTER_LEFT">
-            <Label text="Memoria Total (KB):" styleClass="muted"/>
-            <TextField fx:id="txtTotalMemory" text="1024" promptText="1000" prefWidth="110" prefHeight="32"/>
-        </HBox>
-
-        <HBox spacing="10" alignment="CENTER_LEFT">
-            <Label text="Tamaño Unidad (KB):" styleClass="muted"/>
-            <TextField fx:id="txtUnitSize" text="4" promptText="4" prefWidth="90" prefHeight="32"/>
-        </HBox>
-
-        <Button text="Aplicar Configuración" onAction="#handleApplyConfig" prefHeight="32" styleClass="button-primary"/>
-    </HBox>
-
-    <!-- CONTENEDOR PRINCIPAL DE LA SIMULACIÓN -->
-    <VBox fx:id="mapContainer" spacing="12" alignment="TOP_CENTER" visible="false" managed="false" VBox.vgrow="ALWAYS" maxWidth="960">
-
-        <!-- MÉTRICAS Y LEYENDA CUADRADA DINÁMICA -->
-        <HBox spacing="12" alignment="CENTER" maxWidth="960">
-            <HBox spacing="10" alignment="CENTER" styleClass="card" HBox.hgrow="ALWAYS" prefHeight="45">
-                <Label text="TOTAL:" styleClass="muted"/>
-                <Label fx:id="lblTotal" text="0 KB" styleClass="value"/>
-            </HBox>
-            <HBox spacing="10" alignment="CENTER" styleClass="card" HBox.hgrow="ALWAYS" prefHeight="45">
-                <Label text="USADA:" styleClass="muted"/>
-                <Label fx:id="lblUsed" text="0 KB" styleClass="value"/>
-            </HBox>
-            <HBox spacing="10" alignment="CENTER" styleClass="card" HBox.hgrow="ALWAYS" prefHeight="45">
-                <Label text="LIBRE:" styleClass="muted"/>
-                <Label fx:id="lblFree" text="0 KB" styleClass="value"/>
-            </HBox>
-            <HBox spacing="10" alignment="CENTER" styleClass="card" HBox.hgrow="ALWAYS" prefHeight="45">
-                <Label text="SOBRANTE:" styleClass="muted"/>
-                <Label fx:id="lblWaste" text="0 KB" styleClass="value"/>
-            </HBox>
-
-            <!-- LEYENDA QUE RESPONDE AL ESTADO DE SELECCIÓN -->
-            <HBox spacing="20" alignment="CENTER" styleClass="card, compact-card" prefHeight="45" style="-fx-padding: 0 16;">
-                <HBox spacing="8" alignment="CENTER">
-                    <Region fx:id="regLegendFree" minWidth="16" prefWidth="16" maxWidth="16" minHeight="16" prefHeight="16" maxHeight="16"
-                            style="-fx-background-color: #2563eb; -fx-border-color: #1d4ed8; -fx-background-radius: 3; -fx-border-radius: 3;"/>
-                    <Label text="Bloque Libre" styleClass="value"/>
-                </HBox>
-                <HBox spacing="8" alignment="CENTER">
-                    <Region minWidth="16" prefWidth="16" maxWidth="16" minHeight="16" prefHeight="16" maxHeight="16"
-                            style="-fx-background-color: #16a34a; -fx-border-color: #15803d; -fx-background-radius: 3; -fx-border-radius: 3;"/>
-                    <Label text="Bloque Ocupado" styleClass="value"/>
-                </HBox>
-            </HBox>
-        </HBox>
-
-        <!-- RECUADRO DE CELDAS -->
-        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" prefHeight="240" maxWidth="960" styleClass="gantt-scroll">
-            <content>
-                <VBox alignment="CENTER" style="-fx-padding: 10;">
-                    <Canvas fx:id="mapCanvas"/>
-                </VBox>
-            </content>
-        </ScrollPane>
-
-        <Label fx:id="lblDetail" text="Pasa el cursor por una celda para inspeccionarla." styleClass="muted"/>
-
-        <!-- SECCIÓN INFERIOR DIVIDIDA: FORMULARIO IZQUIERDA | TABLA DERECHA -->
-        <HBox spacing="14" maxWidth="960" VBox.vgrow="ALWAYS">
-
-            <!-- FORMULARIO IZQUIERDA CON VALORES POR DEFECTO -->
-            <VBox spacing="10" styleClass="card" prefWidth="280" minWidth="280">
-                <Label text="NUEVO PROCESO" styleClass="card-title"/>
-
-                <VBox spacing="4">
-                    <Label text="Nombre del Proceso" styleClass="muted"/>
-                    <TextField fx:id="txtProcessName" promptText="Ej. DDD1" prefHeight="32"/>
-                </VBox>
-
-                <VBox spacing="4">
-                    <Label text="Tamaño Requerido (KB)" styleClass="muted"/>
-                    <TextField fx:id="txtProcessSize" promptText="Ej. 51" prefHeight="32"/>
-                </VBox>
-
-                <Region VBox.vgrow="ALWAYS"/>
-
-                <Button text="+ Asignar Proceso" onAction="#handleAddProcess" maxWidth="Infinity" prefHeight="36" styleClass="button-primary"/>
-                <Button text="↻ Reiniciar Mapa" onAction="#handleResetMemory" maxWidth="Infinity" prefHeight="32" styleClass="button-secondary"/>
-            </VBox>
-
-            <!-- TABLA DE PROCESOS DERECHA -->
-            <VBox spacing="10" styleClass="card" HBox.hgrow="ALWAYS">
-                <Label text="PROCESOS EN MEMORIA" styleClass="card-title"/>
-
-                <TableView fx:id="tblProcesses" VBox.vgrow="ALWAYS" prefHeight="180">
-                    <columns>
-                        <TableColumn fx:id="colName" text="Proceso" prefWidth="100"/>
-                        <TableColumn fx:id="colRequested" text="Solicitado" prefWidth="95"/>
-                        <TableColumn fx:id="colAssigned" text="Asignado" prefWidth="95"/>
-                        <TableColumn fx:id="colCells" text="Rango Celdas" prefWidth="130"/>
-                        <TableColumn fx:id="colWaste" text="Sobrante" prefWidth="100"/>
-                        <TableColumn fx:id="colAction" text="Acción" prefWidth="105"/>
-                    </columns>
-                </TableView>
-            </VBox>
-
-        </HBox>
-
-    </VBox>
-
-</VBox>
+    </content>
+</ScrollPane>

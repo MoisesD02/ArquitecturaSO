@@ -15,6 +15,7 @@ public class BitMapController {
     @FXML private TextField txtTotalMemory;
     @FXML private TextField txtUnitSize;
     @FXML private VBox mapContainer;
+    @FXML private VBox canvasContainer;
     @FXML private Canvas mapCanvas;
 
     @FXML private Label lblTotal;
@@ -45,7 +46,7 @@ public class BitMapController {
     private int processCounter = 1;
 
     private final int columns = 32;
-    private final double cellWidth = 24;
+    private double cellWidth = 24;
 
     public record ProcesoAsignado(int id, String name, int requestedKB, int start, int units) {}
 
@@ -57,7 +58,18 @@ public class BitMapController {
         colCells.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().start() + "–" + (data.getValue().start() + data.getValue().units() - 1)));
         colWaste.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(((data.getValue().units() * unitKB) - data.getValue().requestedKB()) + " KB"));
 
-        // BOTÓN LIBERAR ANCHO (CUBRE CASI TODA LA CASILLA)
+        // LISTENER RESPONSIVO PARA RECALCULAR TAMAÑO DE ANCHO DE CELDAS DEL CANVAS
+        if (canvasContainer != null) {
+            canvasContainer.widthProperty().addListener((obs, oldVal, newVal) -> {
+                if (newVal != null && newVal.doubleValue() > 0 && totalCells > 0) {
+                    double availableWidth = newVal.doubleValue() - 30;
+                    cellWidth = Math.max(14, availableWidth / columns);
+                    drawMap();
+                }
+            });
+        }
+
+        // BOTÓN LIBERAR
         colAction.setCellFactory(param -> new TableCell<>() {
             private final Button btnDelete = new Button("Liberar");
             {
@@ -115,7 +127,7 @@ public class BitMapController {
             }
         });
 
-        // CONTROL DE TOGGLE DE SELECCIÓN SIN CONFLICTION CON JAVAFX
+        // CONTROL DE TOGGLE
         tblProcesses.setRowFactory(tv -> {
             TableRow<ProcesoAsignado> row = new TableRow<>();
             row.setOnMouseClicked(event -> {
@@ -124,7 +136,6 @@ public class BitMapController {
                     ProcesoAsignado currentSelected = tblProcesses.getSelectionModel().getSelectedItem();
 
                     if (currentSelected != null && currentSelected.equals(item)) {
-                        // Consumimos el evento y limpiamos la selección
                         tblProcesses.getSelectionModel().clearSelection();
                         event.consume();
                     }
@@ -295,7 +306,8 @@ public class BitMapController {
     }
 
     private void drawMap() {
-        if (totalCells == 0) return;
+        // VALIDACIÓN ANTI-NPE: Si no hay celdas o el arreglo aún no se ha inicializado, no dibujamos
+        if (totalCells == 0 || owners == null) return;
 
         int rows = (int) Math.ceil((double) totalCells / columns);
         mapCanvas.setWidth(columns * cellWidth);
@@ -310,7 +322,7 @@ public class BitMapController {
             double x = (i % columns) * cellWidth;
             double y = (i / columns) * cellWidth;
 
-            int ownerId = owners[i];
+            int ownerId = owners[i]; // Ya no lanzará NullPointerException
             boolean isOccupied = ownerId != 0;
 
             g.setFill(Color.web(isOccupied ? "#16a34a" : "#2563eb"));
