@@ -22,6 +22,7 @@ public class FIFO implements AlgoritmoReemplazo {
 
             boolean falloPagina;
             Integer paginaReemplazada = null;
+            String detalleDecision = null;
 
             if (marcos.contains(pagina)) {
 
@@ -42,11 +43,16 @@ public class FIFO implements AlgoritmoReemplazo {
 
                     int posicion = marcos.indexOf(paginaVieja);
 
-                    marcos.set(posicion, pagina);
+                    paginaReemplazada = paginaVieja;
+
+                    detalleDecision = "La página " + paginaVieja
+                            + " es la más antigua en memoria.";
+
+                    marcos.set(
+                            posicion, pagina
+                    );
 
                     cola.add(pagina);
-
-                    paginaReemplazada = paginaVieja;
                 }
             }
 
@@ -60,7 +66,8 @@ public class FIFO implements AlgoritmoReemplazo {
                     pagina,
                     new ArrayList<>(marcos),
                     falloPagina,
-                    paginaReemplazada
+                    paginaReemplazada,
+                    detalleDecision
             );
 
             resultado.agregarPaso(paso);
