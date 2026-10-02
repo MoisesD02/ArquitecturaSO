@@ -13,6 +13,8 @@ import java.io.IOException;
 
 public class MemoryController {
 
+    private Node linkedView;
+    private LinkedListController linkedController;
     @FXML private VBox optsMultiprogramming;
     @FXML private VBox optsVirtualMemory;
     @FXML private ComboBox<String> cmbLinkedListFit;
@@ -65,11 +67,10 @@ public class MemoryController {
         String fitType = cmbLinkedListFit.getValue();
         if (fitType != null) {
             try {
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/Multiprogramming/LinkedList-view.fxml"));
-                Node node = loader.load();
-
-                LinkedListController controller = loader.getController();
-                controller.setStrategy(fitType);
+                if (linkedView == null) { FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/Multiprogramming/LinkedList-view.fxml")); linkedView = loader.load(); linkedController = loader.getController(); }
+                Node node = linkedView;
+                linkedController.setStrategy(fitType);
+                subOptionsArea.setVisible(false); subOptionsArea.setManaged(false);
 
                 contentArea.getChildren().clear();
                 contentArea.getChildren().add(node);
