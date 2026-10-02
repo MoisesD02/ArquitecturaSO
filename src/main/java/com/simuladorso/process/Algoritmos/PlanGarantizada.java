@@ -11,8 +11,7 @@ public class PlanGarantizada {
     public record ProcesoGarantizado(
             int pid,
             String nombre,
-            int rafagaCpu,
-            int tiempoLlegada) {
+            int rafagaCpu) {
     }
 
 
@@ -42,6 +41,7 @@ public class PlanGarantizada {
             List<ProcesoGarantizado> procesos) {
 
 
+        Map<ProcesoGarantizado, Double> derecho = new LinkedHashMap<>();
         Map<ProcesoGarantizado, Integer> restante =
                 new LinkedHashMap<>();
 
@@ -54,6 +54,7 @@ public class PlanGarantizada {
                 procesos) {
 
 
+            derecho.put(proceso,0.0);
             restante.put(
                     proceso,
                     proceso.rafagaCpu()
@@ -79,67 +80,8 @@ public class PlanGarantizada {
                 .anyMatch(valor -> valor > 0)) {
 
 
-            final int tiempoActual =
-                    tiempo;
-
-
-            List<ProcesoGarantizado> activos =
-                    restante.keySet()
-                            .stream()
-
-                            .filter(
-                                    proceso ->
-                                            restante.get(proceso) > 0
-                            )
-
-                            .filter(
-                                    proceso ->
-                                            proceso.tiempoLlegada()
-                                                    <= tiempoActual
-                            )
-
-                            .toList();
-
-
-            /*
-             * Todavía no llegó ningún proceso.
-             */
-            if (activos.isEmpty()) {
-
-
-                int proximaLlegada =
-                        restante.keySet()
-                                .stream()
-
-                                .filter(
-                                        proceso ->
-                                                restante.get(proceso) > 0
-                                )
-
-                                .mapToInt(
-                                        ProcesoGarantizado::tiempoLlegada
-                                )
-
-                                .filter(
-                                        llegada ->
-                                                llegada > tiempoActual
-                                )
-
-                                .min()
-
-                                .orElse(
-                                        tiempoActual + 1
-                                );
-
-
-                tiempo =
-                        proximaLlegada;
-
-
-                continue;
-            }
-
-
+            List<ProcesoGarantizado> activos = restante.keySet().stream()
+                    .filter(proceso -> restante.get(proceso) > 0).toList();
             int procesosActivos =
                     activos.size();
 
@@ -152,12 +94,7 @@ public class PlanGarantizada {
                                     Comparator
                                             .<ProcesoGarantizado>comparingDouble(
                                                     proceso ->
-                                                            calcularRelacion(
-                                                                    cpuRecibida.get(proceso),
-                                                                    tiempoActual
-                                                                            - proceso.tiempoLlegada(),
-                                                                    procesosActivos
-                                                            )
+                                                            derecho.get(proceso)==0 ? 0 : cpuRecibida.get(proceso)/derecho.get(proceso)
                                             )
 
                                             .thenComparingInt(
@@ -168,6 +105,7 @@ public class PlanGarantizada {
                             .orElseThrow();
 
 
+            for(var proceso:activos) derecho.put(proceso,derecho.get(proceso)+1.0/procesosActivos);
             pasos.add(
 
                     new Paso(
@@ -234,30 +172,4 @@ public class PlanGarantizada {
     }
 
 
-    private double calcularRelacion(
-            int cpuRecibida,
-            int tiempoActivo,
-            int procesosActivos) {
-
-
-        if (tiempoActivo <= 0
-                || procesosActivos == 0) {
-
-            return 0;
-        }
-
-
-        double cpuEsperada =
-                tiempoActivo
-                        / (double) procesosActivos;
-
-
-        if (cpuEsperada == 0) {
-            return 0;
-        }
-
-
-        return cpuRecibida
-                / cpuEsperada;
-    }
 }

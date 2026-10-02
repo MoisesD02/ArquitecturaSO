@@ -42,6 +42,7 @@ import java.util.List;
 import javafx.scene.control.ScrollPane;
 
 public class ProcessesController {
+    private final Label modelDescription = new Label();
 
 
     // ==============================================
@@ -585,6 +586,18 @@ public class ProcessesController {
     // ==============================================
 
     private void actualizarInterfazSegunAlgoritmo() {
+        boolean fcfsMode = FCFS_NOMBRE.equals(cmbAlgorithm.getValue());
+        mostrarNodo(txtArrivalTime.getParent(), fcfsMode);
+        colArrival.setVisible(fcfsMode);
+        if(modelDescription.getParent()==null && cmbAlgorithm.getParent() instanceof VBox box) {
+            modelDescription.setWrapText(true); modelDescription.setStyle("-fx-text-fill: #475569;"); box.getChildren().add(modelDescription);
+        }
+        modelDescription.setText(fcfsMode ? "FCFS: se respeta el tiempo de llegada; los empates se resuelven por PID." :
+            DOS_NIVELES.equals(cmbAlgorithm.getValue()) ? "Lote en t=0. RAM: 1200 MB; quantum: 2; revisión de residentes: cada 4 unidades. BLOQUEADO indica espera en secundaria. Intercambio sin coste simulado." :
+            COLAS_MULTIPLES.equals(cmbAlgorithm.getValue()) ? "Lote en t=0. Sistema > Interactivo > Segundo plano; FCFS por PID dentro de cada cola, sin desalojo." :
+            GARANTIZADA.equals(cmbAlgorithm.getValue()) ? "Lote en t=0. Reparto equitativo acumulado entre procesos activos; selección cada unidad. Empates por PID." :
+            "Lote completo disponible en t=0. Sin filtro de llegada; los empates se resuelven por PID.");
+
 
         String algoritmo =
                 cmbAlgorithm.getValue();
@@ -686,7 +699,7 @@ public class ProcessesController {
             }
 
 
-            int llegada =
+            int llegada = !FCFS_NOMBRE.equals(cmbAlgorithm.getValue()) ? 0 :
                     leerEnteroNoNegativo(
                             txtArrivalTime,
                             "tiempo de llegada"
@@ -1281,6 +1294,7 @@ public class ProcessesController {
         }
 
 
+        if (!FCFS_NOMBRE.equals(cmbAlgorithm.getValue())) procesos.forEach(p -> p.setTiempoLlegada(0));
         procesosSimulacionActual.clear();
 
 
@@ -1368,11 +1382,9 @@ public class ProcessesController {
             }
             case ROUND_ROBIN -> {
 
-                int quantum =
-                        leerEnteroPositivo(
-                                txtQuantum,
-                                "quantum"
-                        );
+                int quantum;
+                try { quantum=leerEnteroPositivo(txtQuantum,"quantum"); }
+                catch(IllegalArgumentException e){mostrarError(e.getMessage());return;}
 
                 resultadoRoundRobin =
                         roundRobin.planificar(
@@ -1488,6 +1500,8 @@ public class ProcessesController {
     // ==============================================
 
     private void actualizarEstadosPlanificacion() {
+        if(DOS_NIVELES.equals(cmbAlgorithm.getValue())) { actualizarEstadosDosNiveles(); return; }
+
 
         String algoritmo =
                 cmbAlgorithm.getValue();
@@ -1809,167 +1823,49 @@ public class ProcessesController {
 
     //Dos niveles
     private boolean prepararDosNiveles() {
-
         segmentosDosNiveles.clear();
-
-
-        for (Proceso proceso :
-                procesosSimulacionActual) {
-
-            proceso.reiniciarSimulacion();
+        try {
+            resultadoDosNiveles=planDosNiveles.simular(1200, procesosSimulacionActual.stream()
+                .map(p -> new PlanDosNiveles.ProcesoPlanificado(p.getPid(),p.getNombre(),p.getMemoriaMB(),p.getRafagaCPU())).toList());
+        } catch (IllegalArgumentException e) { mostrarError(e.getMessage()); return false; }
+        for (Proceso p:procesosSimulacionActual) {
+            p.reiniciarSimulacion();
+            var steps=resultadoDosNiveles.pasos().stream().filter(step -> step.proceso().pid()==p.getPid()).toList();
+            int first=steps.getFirst().inicio(),end=steps.getLast().fin();
+            p.setTiempoInicio(first);p.setTiempoFinalizacion(end);p.setTiempoEspera(end-p.getRafagaCPU());p.setTiempoRespuesta(first);
         }
-
-
-        if (procesosSimulacionActual.stream()
-                .anyMatch(
-                        proceso ->
-                                proceso.getMemoriaMB() <= 0
-                )) {
-
-            mostrarError(
-                    "Todos los procesos de dos niveles "
-                            + "deben tener memoria mayor que 0 MB."
-            );
-
-            return false;
-        }
-
-
-        resultadoDosNiveles =
-                planDosNiveles.simular(
-
-                        1200,
-
-                        procesosSimulacionActual.stream()
-
-                                .sorted(
-                                        Comparator
-                                                .comparingInt(
-                                                        Proceso::getTiempoLlegada
-                                                )
-                                                .thenComparingInt(
-                                                        Proceso::getPid
-                                                )
-                                )
-
-                                .map(
-                                        proceso ->
-                                                new PlanDosNiveles.ProcesoPlanificado(
-                                                        proceso.getPid(),
-                                                        proceso.getNombre(),
-                                                        proceso.getMemoriaMB(),
-                                                        proceso.getRafagaCPU()
-                                                )
-                                )
-
-                                .toList()
-                );
-
-
-        int tiempoActual = 0;
-
-
-        for (PlanDosNiveles.ProcesoPlanificado planificado :
-                resultadoDosNiveles.ordenEjecucion()) {
-
-
-            Proceso proceso =
-                    buscarProcesoPorPid(
-                            planificado.pid()
-                    );
-
-
-            if (proceso == null) {
-                continue;
-            }
-
-
-            /*
-             * Si todavía no llegó el siguiente proceso,
-             * la CPU permanece libre.
-             */
-            if (tiempoActual
-                    < proceso.getTiempoLlegada()) {
-
-
-                segmentosDosNiveles.add(
-
-                        new SegmentoDosNiveles(
-                                null,
-                                tiempoActual,
-                                proceso.getTiempoLlegada(),
-                                true
-                        )
-                );
-
-
-                tiempoActual =
-                        proceso.getTiempoLlegada();
-            }
-
-
-            int inicio =
-                    tiempoActual;
-
-
-            int fin =
-                    inicio
-                            + proceso.getRafagaCPU();
-
-
-            proceso.setTiempoInicio(
-                    inicio
-            );
-
-
-            proceso.setTiempoFinalizacion(
-                    fin
-            );
-
-
-            proceso.setTiempoEspera(
-
-                    Math.max(
-                            0,
-                            inicio
-                                    - proceso.getTiempoLlegada()
-                    )
-            );
-
-
-            proceso.setTiempoRespuesta(
-                    proceso.getTiempoEspera()
-            );
-
-
-            proceso.setTiempoRestante(
-                    proceso.getRafagaCPU()
-            );
-
-
-            segmentosDosNiveles.add(
-
-                    new SegmentoDosNiveles(
-                            proceso,
-                            inicio,
-                            fin,
-                            false
-                    )
-            );
-
-
-            tiempoActual =
-                    fin;
-        }
-
-
+        for (var step:resultadoDosNiveles.pasos()) segmentosDosNiveles.add(new SegmentoDosNiveles(buscarProcesoPorPid(step.proceso().pid()),step.inicio(),step.fin(),false));
         return true;
     }
 
+    private void actualizarEstadosDosNiveles() {
+        if(resultadoDosNiveles==null)return;
+        var actual=resultadoDosNiveles.pasos().stream().filter(step -> step.inicio()<=tiempoSimulacion && step.fin()>tiempoSimulacion).findFirst().orElse(null);
+        for(Proceso p:procesosSimulacionActual){
+            int cpu=resultadoDosNiveles.pasos().stream().filter(step -> step.proceso().pid()==p.getPid())
+                .mapToInt(step -> Math.max(0,Math.min(tiempoSimulacion,step.fin())-step.inicio())).sum();
+            p.setTiempoCPURecibido(cpu);p.setTiempoRestante(p.getRafagaCPU()-cpu);
+            p.setEstado(cpu==p.getRafagaCPU()?EstadoProceso.TERMINADO:
+                actual!=null&&actual.proceso().pid()==p.getPid()?EstadoProceso.EJECUCION:
+                actual!=null&&actual.residentes().contains(p.getPid())?EstadoProceso.LISTO:EstadoProceso.BLOQUEADO);
+        }
+    }
 
+    private int ordenListo(Proceso p) {
+        String a=cmbAlgorithm.getValue();
+        if(FCFS_NOMBRE.equals(a))return p.getTiempoLlegada();
+        if(SJF.equals(a))return p.getRafagaCPU();
+        if(PRIORIDAD.equals(a))return p.getPrioridad();
+        if(COLAS_MULTIPLES.equals(a))return switch(p.getCola()){case "Sistema"->1;case "Interactivo"->2;default->3;};
+        if(ROUND_ROBIN.equals(a)&&resultadoRoundRobin!=null)return resultadoRoundRobin.getSegmentos().stream()
+            .filter(step -> !step.esCPUOciosa()&&step.getProceso().getPid()==p.getPid()&&step.getInicio()>=tiempoSimulacion).mapToInt(step->step.getInicio()).min().orElse(Integer.MAX_VALUE);
+        if(GARANTIZADA.equals(a)&&resultadoGarantizada!=null)return resultadoGarantizada.pasos().stream()
+            .filter(step->step.proceso().pid()==p.getPid()&&step.inicio()>=tiempoSimulacion).mapToInt(step->step.inicio()).min().orElse(Integer.MAX_VALUE);
+        if(DOS_NIVELES.equals(a)&&resultadoDosNiveles!=null)return resultadoDosNiveles.pasos().stream()
+            .filter(step->step.proceso().pid()==p.getPid()&&step.inicio()>=tiempoSimulacion).mapToInt(step->step.inicio()).min().orElse(Integer.MAX_VALUE);
+        return p.getPid();
+    }
 
-
-    //Planificacion garantizada
     private void prepararGarantizada() {
 
         for (Proceso proceso :
@@ -1986,12 +1882,7 @@ public class ProcessesController {
 
                                 .sorted(
                                         Comparator
-                                                .comparingInt(
-                                                        Proceso::getTiempoLlegada
-                                                )
-                                                .thenComparingInt(
-                                                        Proceso::getPid
-                                                )
+                                                .comparingInt(Proceso::getPid)
                                 )
 
                                 .map(
@@ -1999,8 +1890,7 @@ public class ProcessesController {
                                                 new PlanGarantizada.ProcesoGarantizado(
                                                         proceso.getPid(),
                                                         proceso.getNombre(),
-                                                        proceso.getRafagaCPU(),
-                                                        proceso.getTiempoLlegada()
+                                                        proceso.getRafagaCPU()
                                                 )
                                 )
 
@@ -2047,7 +1937,7 @@ public class ProcessesController {
                             .min()
 
                             .orElse(
-                                    proceso.getTiempoLlegada()
+                                    0
                             );
 
 
@@ -2067,7 +1957,7 @@ public class ProcessesController {
                     Math.max(
                             0,
                             fin
-                                    - proceso.getTiempoLlegada()
+                                    - 0
                                     - proceso.getRafagaCPU()
                     );
 
@@ -2076,7 +1966,7 @@ public class ProcessesController {
                     Math.max(
                             0,
                             inicio
-                                    - proceso.getTiempoLlegada()
+                                    - 0
                     );
 
 
@@ -2616,6 +2506,10 @@ public class ProcessesController {
     // ==============================================
 
     private void actualizarColaListos() {
+        if (!FCFS_NOMBRE.equals(cmbAlgorithm.getValue()) && !simulacionIniciada) {
+            for (Proceso p : procesos) { p.setTiempoLlegada(0); if (p.getEstado()!=EstadoProceso.TERMINADO) p.setEstado(EstadoProceso.LISTO); }
+        }
+
 
 
         readyQueueContainer
@@ -2631,17 +2525,7 @@ public class ProcessesController {
                                         == EstadoProceso.LISTO
                 )
 
-                .sorted(
-
-                        Comparator
-                                .comparingInt(
-                                        Proceso::getTiempoLlegada
-                                )
-                                .thenComparingInt(
-                                        Proceso::getPid
-                                )
-                )
-
+                .sorted(Comparator.comparingInt(this::ordenListo).thenComparingInt(Proceso::getPid))
                 .forEach(
                         proceso -> {
 

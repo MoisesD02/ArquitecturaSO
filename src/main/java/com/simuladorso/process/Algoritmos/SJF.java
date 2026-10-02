@@ -104,244 +104,28 @@ public class SJF {
     // ALGORITMO SJF NO APROPIATIVO
     // =========================================
 
-    public Resultado planificar(
-            List<Proceso> procesosOriginales) {
-
-
-        if (procesosOriginales == null
-                || procesosOriginales.isEmpty()) {
-
-            throw new IllegalArgumentException(
-                    "Debe existir al menos un proceso."
-            );
+    public Resultado planificar(List<Proceso> procesosOriginales) {
+        if (procesosOriginales == null || procesosOriginales.isEmpty())
+            throw new IllegalArgumentException("Debe existir al menos un proceso.");
+        List<Proceso> procesos = new ArrayList<>(procesosOriginales);
+        for (Proceso p : procesos) if (p == null || p.getRafagaCPU() <= 0)
+            throw new IllegalArgumentException("La ráfaga debe ser positiva.");
+        // Todos los procesos del lote están disponibles desde t=0.
+        procesos.sort(Comparator.comparingInt(Proceso::getRafagaCPU).thenComparingInt(Proceso::getPid));
+        List<Segmento> segmentos = new ArrayList<>();
+        int tiempo = 0;
+        double espera = 0;
+        for (Proceso p : procesos) {
+            p.reiniciarSimulacion();
+            p.setTiempoInicio(tiempo);
+            p.setTiempoEspera(tiempo);
+            p.setTiempoRespuesta(tiempo);
+            espera += tiempo;
+            int fin = Math.addExact(tiempo, p.getRafagaCPU());
+            p.setTiempoFinalizacion(fin);
+            segmentos.add(new Segmento(p, tiempo, fin));
+            tiempo = fin;
         }
-
-
-        /*
-         * Trabajamos con una copia para no modificar
-         * el orden general de la tabla.
-         */
-        List<Proceso> pendientes =
-                new ArrayList<>(procesosOriginales);
-
-
-        /*
-         * Reiniciamos únicamente los procesos
-         * que participan en esta simulación.
-         */
-        for (Proceso proceso : pendientes) {
-
-            proceso.reiniciarSimulacion();
-        }
-
-
-        List<Segmento> segmentos =
-                new ArrayList<>();
-
-
-        int tiempoActual = 0;
-
-        double sumaEspera = 0;
-        double sumaRespuesta = 0;
-
-
-        while (!pendientes.isEmpty()) {
-
-
-            /*
-             * Guardamos el tiempo actual en una
-             * variable que no cambiará durante
-             * esta búsqueda.
-             */
-            final int tiempoReferencia =
-                    tiempoActual;
-
-
-            /*
-             * Buscamos todos los procesos
-             * que ya llegaron.
-             */
-            List<Proceso> disponibles =
-                    pendientes.stream()
-
-                            .filter(
-                                    proceso ->
-                                            proceso.getTiempoLlegada()
-                                                    <= tiempoReferencia
-                            )
-
-                            .sorted(
-
-                                    Comparator
-                                            /*
-                                             * Menor ráfaga primero.
-                                             */
-                                            .comparingInt(
-                                                    Proceso::getRafagaCPU
-                                            )
-
-                                            /*
-                                             * Si empatan en ráfaga,
-                                             * el que llegó primero.
-                                             */
-                                            .thenComparingInt(
-                                                    Proceso::getTiempoLlegada
-                                            )
-
-                                            /*
-                                             * Si también empatan
-                                             * en llegada, menor PID.
-                                             */
-                                            .thenComparingInt(
-                                                    Proceso::getPid
-                                            )
-                            )
-
-                            .toList();
-
-
-            /*
-             * Si todavía no llegó ningún proceso,
-             * la CPU permanece libre hasta la
-             * próxima llegada.
-             */
-            if (disponibles.isEmpty()) {
-
-
-                Proceso siguiente =
-                        pendientes.stream()
-
-                                .min(
-                                        Comparator
-                                                .comparingInt(
-                                                        Proceso::getTiempoLlegada
-                                                )
-
-                                                .thenComparingInt(
-                                                        Proceso::getPid
-                                                )
-                                )
-
-                                .orElseThrow();
-
-
-                int siguienteLlegada =
-                        siguiente.getTiempoLlegada();
-
-
-                segmentos.add(
-
-                        new Segmento(
-                                null,
-                                tiempoActual,
-                                siguienteLlegada
-                        )
-                );
-
-
-                tiempoActual =
-                        siguienteLlegada;
-
-
-                continue;
-            }
-
-
-            /*
-             * El primer elemento es el proceso
-             * con la menor ráfaga disponible.
-             */
-            Proceso seleccionado =
-                    disponibles.get(0);
-
-
-            int inicio =
-                    tiempoActual;
-
-
-            int fin =
-                    inicio
-                            + seleccionado.getRafagaCPU();
-
-
-            int espera =
-                    inicio
-                            - seleccionado.getTiempoLlegada();
-
-
-            /*
-             * En SJF no apropiativo,
-             * respuesta = espera.
-             */
-            int respuesta =
-                    espera;
-
-
-            seleccionado.setTiempoInicio(
-                    inicio
-            );
-
-
-            seleccionado.setTiempoFinalizacion(
-                    fin
-            );
-
-
-            seleccionado.setTiempoEspera(
-                    espera
-            );
-
-
-            seleccionado.setTiempoRespuesta(
-                    respuesta
-            );
-
-
-            segmentos.add(
-
-                    new Segmento(
-                            seleccionado,
-                            inicio,
-                            fin
-                    )
-            );
-
-
-            sumaEspera += espera;
-
-            sumaRespuesta += respuesta;
-
-
-            /*
-             * SJF no apropiativo:
-             *
-             * El proceso conserva la CPU
-             * hasta terminar.
-             */
-            tiempoActual = fin;
-
-
-            pendientes.remove(
-                    seleccionado
-            );
-        }
-
-
-        double esperaPromedio =
-                sumaEspera
-                        / procesosOriginales.size();
-
-
-        double respuestaPromedio =
-                sumaRespuesta
-                        / procesosOriginales.size();
-
-
-        return new Resultado(
-                segmentos,
-                tiempoActual,
-                esperaPromedio,
-                respuestaPromedio
-        );
+        return new Resultado(segmentos, tiempo, espera / procesos.size(), espera / procesos.size());
     }
 }
