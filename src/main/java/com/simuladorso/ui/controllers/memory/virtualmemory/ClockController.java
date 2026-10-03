@@ -59,6 +59,11 @@ public class ClockController
                     )
             );
 
+            actualizarMetricasRendimiento(
+                    referencias.size(),
+                    resultado.getTotalFallos()
+            );
+
 
             contenedorSimulacion
                     .getChildren()

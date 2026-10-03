@@ -172,6 +172,50 @@
 
     </HBox>
 
+    <VBox spacing="6"
+          maxWidth="Infinity"
+          styleClass="card">
+
+        <Label text="Resultados"
+               styleClass="card-title"/>
+
+        <HBox spacing="12"
+              alignment="CENTER_LEFT">
+
+            <Label text="Cantidad de Fallos:"
+                   styleClass="muted"/>
+
+            <Label fx:id="lblCantidadFallos"
+                   text="0"
+                   style="-fx-font-weight: bold;
+                      -fx-font-size: 14px;
+                      -fx-text-fill: #142744;"/>
+
+            <Region HBox.hgrow="ALWAYS"/>
+
+            <Label text="Frecuencia:"
+                   styleClass="muted"/>
+
+            <Label fx:id="lblFrecuencia"
+                   text="0.00"
+                   style="-fx-font-weight: bold;
+                      -fx-font-size: 14px;
+                      -fx-text-fill: #142744;"/>
+
+            <Region HBox.hgrow="ALWAYS"/>
+
+            <Label text="Rendimiento:"
+                   styleClass="muted"/>
+
+            <Label fx:id="lblRendimiento"
+                   text="100.00%"
+                   style="-fx-font-weight: bold;
+                      -fx-font-size: 14px;
+                      -fx-text-fill: #142744;"/>
+
+        </HBox>
+
+    </VBox>
 
     <!-- SIMULACIÓN -->
 

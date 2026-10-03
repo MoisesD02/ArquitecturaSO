@@ -3,7 +3,6 @@ package com.simuladorso.ui.controllers.memory.virtualmemory;
 import com.simuladorso.memory.algoritmos.SegundaOportunidad;
 import com.simuladorso.memory.algoritmos.secondchance.ResultadoSecondChance;
 import com.simuladorso.ui.controllers.memory.virtualmemory.componentes.TablaReemplazoBuilder;
-
 import javafx.fxml.FXML;
 import javafx.scene.layout.GridPane;
 
@@ -58,6 +57,11 @@ public class SecondChanceController
                     String.valueOf(
                             resultado.getTotalAciertos()
                     )
+            );
+
+            actualizarMetricasRendimiento(
+                    referencias.size(),
+                    resultado.getTotalFallos()
             );
 
 

@@ -3,7 +3,6 @@ package com.simuladorso.ui.controllers.memory.virtualmemory;
 import com.simuladorso.memory.algoritmos.NRU;
 import com.simuladorso.memory.algoritmos.nru.ResultadoNRU;
 import com.simuladorso.ui.controllers.memory.virtualmemory.componentes.TablaReemplazoBuilder;
-
 import javafx.fxml.FXML;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
@@ -74,6 +73,11 @@ public class NruController
                     String.valueOf(
                             resultado.getTotalAciertos()
                     )
+            );
+
+            actualizarMetricasRendimiento(
+                    referencias.size(),
+                    resultado.getTotalFallos()
             );
 
 

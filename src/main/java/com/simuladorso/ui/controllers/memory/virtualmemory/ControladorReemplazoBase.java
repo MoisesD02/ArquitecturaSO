@@ -2,7 +2,6 @@ package com.simuladorso.ui.controllers.memory.virtualmemory;
 
 import com.simuladorso.memory.algoritmos.ResultadoReemplazo;
 import com.simuladorso.ui.controllers.memory.virtualmemory.componentes.TablaReemplazoBuilder;
-
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -34,6 +33,15 @@ public abstract class ControladorReemplazoBase {
 
     @FXML
     protected VBox contenedorSimulacion;
+
+    @FXML
+    protected Label lblCantidadFallos;
+
+    @FXML
+    protected Label lblFrecuencia;
+
+    @FXML
+    protected Label lblRendimiento;
 
 
     protected List<Integer> obtenerReferencias() {
@@ -111,21 +119,21 @@ public abstract class ControladorReemplazoBase {
             ResultadoReemplazo resultado) {
 
         lblTotalReferencias.setText(
-                String.valueOf(
-                        referencias.size()
-                )
+                String.valueOf(referencias.size())
         );
 
         lblFallos.setText(
-                String.valueOf(
-                        resultado.getTotalFallos()
-                )
+                String.valueOf(resultado.getTotalFallos())
         );
 
         lblAciertos.setText(
-                String.valueOf(
-                        resultado.getTotalAciertos()
-                )
+                String.valueOf(resultado.getTotalAciertos())
+        );
+
+        // NUEVO: actualizar fórmula
+        actualizarMetricasRendimiento(
+                referencias.size(),
+                resultado.getTotalFallos()
         );
 
         contenedorSimulacion
@@ -133,36 +141,64 @@ public abstract class ControladorReemplazoBase {
                 .clear();
 
         GridPane tabla =
-                TablaReemplazoBuilder
-                        .crearTablaBasica(
-                                referencias,
-                                cantidadMarcos,
-                                resultado
-                        );
+                TablaReemplazoBuilder.crearTablaBasica(
+                        referencias,
+                        cantidadMarcos,
+                        resultado
+                );
 
         contenedorSimulacion
                 .getChildren()
                 .add(tabla);
     }
 
+    protected void actualizarMetricasRendimiento(
+            int totalReferencias,
+            int totalFallos) {
+
+        lblCantidadFallos.setText(
+                String.valueOf(totalFallos)
+        );
+
+        double frecuencia = 0.0;
+
+        if (totalReferencias > 0) {
+
+            frecuencia =
+                    (double) totalFallos
+                            / totalReferencias;
+        }
+
+        double rendimiento =
+                1.0 - frecuencia;
+
+        lblFrecuencia.setText(
+                String.format(
+                        "%.2f",
+                        frecuencia
+                )
+        );
+
+        lblRendimiento.setText(
+                String.format(
+                        "%.2f%%",
+                        rendimiento * 100
+                )
+        );
+    }
+
 
     protected void limpiarResultados() {
 
-        lblTotalReferencias.setText(
-                "0"
-        );
+        lblTotalReferencias.setText("0");
+        lblFallos.setText("0");
+        lblAciertos.setText("0");
 
-        lblFallos.setText(
-                "0"
-        );
+        lblCantidadFallos.setText("0");
+        lblFrecuencia.setText("0.00");
+        lblRendimiento.setText("100.00%");
 
-        lblAciertos.setText(
-                "0"
-        );
-
-        lblMensaje.setText(
-                ""
-        );
+        lblMensaje.setText("");
 
         contenedorSimulacion
                 .getChildren()
