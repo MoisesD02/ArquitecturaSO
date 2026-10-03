@@ -1,5 +1,172 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.canvas.Canvas?>
+<?import javafx.scene.control.Accordion?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
-<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="com.simuladorso.ui.controllers.memory.multiprogramming.LinkedListController"
-      fx:id="root" spacing="14" fillWidth="true" />
+
+<ScrollPane fitToWidth="true"
+            fitToHeight="true"
+            hbarPolicy="NEVER"
+            vbarPolicy="AS_NEEDED"
+            styleClass="gantt-scroll"
+            xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.simuladorso.ui.controllers.memory.multiprogramming.LinkedListController">
+
+    <content>
+        <VBox fx:id="root" spacing="12" alignment="TOP_CENTER" styleClass="card" maxWidth="Infinity">
+            <padding>
+                <Insets top="12" right="20" bottom="16" left="20"/>
+            </padding>
+
+            <!-- BARRA SUPERIOR DE CONFIGURACIÓN -->
+            <HBox spacing="15" alignment="CENTER_LEFT" styleClass="card, compact-card" maxWidth="Infinity">
+                <HBox spacing="8" alignment="CENTER_LEFT">
+                    <Label text="Capacidad Total (KB):" styleClass="muted"/>
+                    <TextField fx:id="txtCapacity" text="1024" promptText="1024" prefWidth="100" prefHeight="32"/>
+                </HBox>
+
+                <Button fx:id="btnConfigure" text="Aplicar Capacidad" onAction="#handleApplyCapacity" prefHeight="32" styleClass="button-primary"/>
+
+                <HBox spacing="8" alignment="CENTER_LEFT">
+                    <Label text="Estrategia:" styleClass="muted"/>
+                    <ComboBox fx:id="cmbStrategy" prefHeight="32" prefWidth="130"/>
+                </HBox>
+
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label fx:id="lblMessage" wrapText="true" styleClass="form-message"/>
+            </HBox>
+
+            <!-- REGLA EXPLICATIVA DE LA ESTRATEGIA -->
+            <Label fx:id="lblRule" wrapText="true" styleClass="muted" maxWidth="Infinity"/>
+
+            <!-- BLOQUE CENTRAL EN 2 COLUMNAS: IZQUIERDA (MÉTRICAS + LEYENDA) | DERECHA (BARRA Y ESTRUCTURA) -->
+            <HBox spacing="14" maxWidth="Infinity" VBox.vgrow="ALWAYS">
+
+                <!-- COLUMNA IZQUIERDA: MÉTRICAS VERTICALES -->
+                <VBox spacing="10" prefWidth="240" minWidth="240">
+
+                    <VBox spacing="4" alignment="CENTER" styleClass="card" prefHeight="55">
+                        <Label text="CAPACIDAD TOTAL" styleClass="muted" style="-fx-font-size: 10px;"/>
+                        <Label fx:id="lblTotal" text="1024 KB" styleClass="value" style="-fx-font-size: 18px;"/>
+                    </VBox>
+
+                    <VBox spacing="4" alignment="CENTER" styleClass="card" prefHeight="55">
+                        <Label text="MEMORIA UTILIZADA" styleClass="muted" style="-fx-font-size: 10px;"/>
+                        <Label fx:id="lblUsed" text="0 KB" styleClass="value" style="-fx-font-size: 18px;"/>
+                    </VBox>
+
+                    <VBox spacing="4" alignment="CENTER" styleClass="card" prefHeight="55">
+                        <Label text="MEMORIA LIBRE" styleClass="muted" style="-fx-font-size: 10px;"/>
+                        <Label fx:id="lblFree" text="1024 KB" styleClass="value" style="-fx-font-size: 18px; -fx-text-fill: #2563eb;"/>
+                    </VBox>
+
+                    <VBox spacing="4" alignment="CENTER" styleClass="card" prefHeight="55">
+                        <Label text="MAYOR HUECO LIBRE" styleClass="muted" style="-fx-font-size: 10px;"/>
+                        <Label fx:id="lblGap" text="1024 KB" styleClass="value" style="-fx-font-size: 18px; -fx-text-fill: #16a34a;"/>
+                    </VBox>
+
+                </VBox>
+
+                <!-- COLUMNA DERECHA: DISTRIBUCIÓN Y ESTRUCTURA DE NODOS APILADAS -->
+                <VBox spacing="10" HBox.hgrow="ALWAYS">
+
+                    <!-- 1. DISTRIBUCIÓN EN BARRA DE MEMORIA (CANVAS) -->
+                    <VBox spacing="6" styleClass="card" maxWidth="Infinity">
+                        <Label text="MAPA DE DISTRIBUCIÓN EN MEMORIA" styleClass="card-title"/>
+                        <VBox fx:id="canvasContainer" alignment="CENTER" maxWidth="Infinity" style="-fx-padding: 2;">
+                            <Canvas fx:id="mapCanvas" height="75"/>
+                        </VBox>
+                        <Label fx:id="lblCursor" styleClass="muted"/>
+                    </VBox>
+
+                    <!-- 2. ESTRUCTURA INTERNA DE NODOS ENLAZADOS (AHORA SÚPER VISIBLE Y GRANDE) -->
+                    <VBox spacing="6" styleClass="card" VBox.vgrow="ALWAYS" maxWidth="Infinity">
+                        <Label text="ESTRUCTURA INTERNA DE LA LISTA LIGADA (NODOS Y PUNTEROS)" styleClass="card-title"/>
+                        <ScrollPane fitToHeight="true" hbarPolicy="AS_NEEDED" vbarPolicy="NEVER" prefHeight="130" minHeight="130" styleClass="gantt-scroll" maxWidth="Infinity">
+                            <content>
+                                <HBox fx:id="nodesContainer" spacing="12" alignment="CENTER_LEFT" style="-fx-padding: 10;"/>
+                            </content>
+                        </ScrollPane>
+                    </VBox>
+
+                </VBox>
+
+            </HBox>
+
+            <!-- SECCIÓN INFERIOR: FORMULARIO IZQUIERDA | TABLA DERECHA -->
+            <HBox spacing="14" maxWidth="Infinity" VBox.vgrow="ALWAYS">
+
+                <!-- FORMULARIO NUEVO PROCESO -->
+                <VBox spacing="10" styleClass="card" prefWidth="280" minWidth="260">
+                    <Label text="NUEVO PROCESO" styleClass="card-title"/>
+
+                    <VBox spacing="4">
+                        <Label text="Nombre del Proceso" styleClass="muted"/>
+                        <TextField fx:id="txtProcessName" promptText="Ej. DDD1" prefHeight="32"/>
+                    </VBox>
+
+                    <VBox spacing="4">
+                        <Label text="Tamaño Solicitado (KB)" styleClass="muted"/>
+                        <TextField fx:id="txtProcessSize" promptText="Ej. 120" prefHeight="32"/>
+                    </VBox>
+
+                    <Region VBox.vgrow="ALWAYS"/>
+
+                    <Button text="+ Asignar Proceso" onAction="#handleAddProcess" maxWidth="Infinity" prefHeight="36" styleClass="button-primary"/>
+                    <Button text="Cargar Ejemplo Comparativo" onAction="#handleLoadExample" maxWidth="Infinity" prefHeight="32" styleClass="button-secondary"/>
+                    <Button text="↻ Reiniciar Memoria" onAction="#handleResetMemory" maxWidth="Infinity" prefHeight="32" styleClass="button-secondary"/>
+                </VBox>
+
+                <!-- TABLA DE PROCESOS EN MEMORIA -->
+                <VBox spacing="10" styleClass="card" HBox.hgrow="ALWAYS">
+                    <HBox alignment="CENTER_LEFT">
+                        <Label text="PROCESOS EN MEMORIA" styleClass="card-title"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button fx:id="btnRelease" text="Liberar Seleccionado" onAction="#handleReleaseSelected" disable="true" styleClass="button-secondary"/>
+                    </HBox>
+
+                    <TableView fx:id="tblProcesses" VBox.vgrow="ALWAYS" prefHeight="170">
+                        <columnResizePolicy>
+                            <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+                        </columnResizePolicy>
+                        <columns>
+                            <TableColumn fx:id="colName" text="Proceso"/>
+                            <TableColumn fx:id="colSize" text="Tamaño"/>
+                            <TableColumn fx:id="colStart" text="Inicio"/>
+                            <TableColumn fx:id="colEnd" text="Fin Exclusivo"/>
+                            <TableColumn fx:id="colAction" text="Acción"/>
+                        </columns>
+                    </TableView>
+                </VBox>
+
+            </HBox>
+
+            <!-- HISTORIAL DE OPERACIONES DESPLEGABLE -->
+            <Accordion maxWidth="Infinity">
+                <panes>
+                    <TitledPane text="Historial de operaciones">
+                        <content>
+                            <TextArea fx:id="txtHistory" editable="false" wrapText="true" prefRowCount="3" styleClass="log-area"/>
+                        </content>
+                    </TitledPane>
+                </panes>
+            </Accordion>
+
+            <Label text="Nota: Cada nodo guarda estado, inicio, tamaño y enlace. Liberar une huecos vecinos sin mover procesos en memoria." styleClass="note" wrapText="true" maxWidth="Infinity"/>
+
+        </VBox>
+    </content>
+</ScrollPane>
