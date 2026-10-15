@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<ScrollPane fitToWidth="true" fitToHeight="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" styleClass="gantt-scroll"
+            xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.simuladorso.ui.controllers.devices.DevicesController">
+
+    <content>
+        <VBox spacing="14" alignment="TOP_CENTER" styleClass="card" maxWidth="Infinity">
+            <padding>
+                <Insets top="16" right="20" bottom="16" left="20"/>
+            </padding>
+
+            <HBox alignment="CENTER_LEFT" spacing="20" maxWidth="Infinity">
+                <VBox spacing="2">
+                    <Label text="Dispositivos de Entrada / Salida (E/S)" styleClass="card-title" style="-fx-font-size: 20px;"/>
+                    <Label text="El simulador está escuchando los puertos físicos. Conecta o desconecta dispositivos para ver los cambios." styleClass="muted"/>
+                </VBox>
+                <Region HBox.hgrow="ALWAYS"/>
+            </HBox>
+
+            <Label fx:id="lblStatus" text="Iniciando monitoreo..." styleClass="muted" style="-fx-font-weight: bold; -fx-text-fill: #16a34a;" maxWidth="Infinity"/>
+
+            <VBox spacing="10" styleClass="card" VBox.vgrow="ALWAYS" maxWidth="Infinity">
+                <TableView fx:id="tblDevices" VBox.vgrow="ALWAYS" prefHeight="350">
+                    <columnResizePolicy>
+                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+                    </columnResizePolicy>
+                    <columns>
+                        <TableColumn fx:id="colNombre" text="Nombre del Dispositivo Físico"/>
+                        <TableColumn fx:id="colConexion" text="Tipo de Interfaz (USB/Bluetooth)"/>
+                        <TableColumn fx:id="colDriver" text="Controlador / Driver"/>
+                    </columns>
+                </TableView>
+            </VBox>
+        </VBox>
+    </content>
+</ScrollPane>

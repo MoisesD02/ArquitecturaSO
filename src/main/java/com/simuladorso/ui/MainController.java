@@ -76,6 +76,8 @@ public class MainController {
     );
 
     private ScrollPane cachedMemoryPane;
+    private ScrollPane cachedDevicesPane;
+
     private Timeline timeline;
     private Timeline realTimeTimeline;
 
@@ -309,11 +311,44 @@ public class MainController {
     }
 
 
-    @FXML private void showDevices() {
-        if (validarKernelActivo("consultar los dispositivos E/S")) {
-            mostrarPagina(devicesPage, navDevices);
+    @FXML
+    private void showDevices() {
+        if (!validarKernelActivo("consultar los dispositivos E/S")) {
+            return;
+        }
+
+        try {
+            // Solo cargamos la vista y el controlador una vez para no duplicar el hilo de monitoreo
+            if (cachedDevicesPane == null) {
+                FXMLLoader loader = new FXMLLoader(
+                        getClass().getResource("/fxml/devices_view.fxml")
+                );
+
+                cachedDevicesPane = loader.load();
+                // Si el FXML no tiene el ScrollPane como raíz, envuélvelo así:
+                // cachedDevicesPane = new ScrollPane((Node) loader.load());
+
+                cachedDevicesPane.setFitToWidth(true);
+                cachedDevicesPane.setFitToHeight(true);
+                cachedDevicesPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+                cachedDevicesPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+                cachedDevicesPane.setStyle("-fx-background-color: transparent; -fx-background: transparent;");
+            }
+
+            ocultarPaginasEstaticas();
+
+            // Inyectamos la nueva vista de E/S en el contenedor principal
+            centerStackPane.getChildren().add(cachedDevicesPane);
+
+            marcarBotonActivo(navDevices);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            registrarEvento("ERROR: No se pudo cargar la vista devices_view.fxml.");
         }
     }
+
+
     @FXML private void showFiles() {
         if (validarKernelActivo("explorar el sistema de archivos")) {
             mostrarPagina(filesPage, navFiles);

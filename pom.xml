@@ -17,6 +17,7 @@
     </properties>
 
     <dependencies>
+        <!-- Dependencias de JavaFX (las que ya tienes) -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
@@ -26,6 +27,19 @@
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
             <version>${javafx.version}</version>
+        </dependency>
+
+        <!-- NATIVO: OSHI para detectar Hardware Real -->
+        <dependency>
+            <groupId>com.github.oshi</groupId>
+            <artifactId>oshi-core</artifactId>
+            <version>6.6.1</version>
+        </dependency>
+        <!-- Evita advertencias de logueo de OSHI en consola -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>2.0.13</version>
         </dependency>
     </dependencies>
 
