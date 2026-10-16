@@ -1,46 +1,349 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ScrollPane?>
-<?import javafx.scene.control.TableColumn?>
-<?import javafx.scene.control.TableView?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.Region?>
-<?import javafx.scene.layout.VBox?>
-
-<ScrollPane fitToWidth="true" fitToHeight="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" styleClass="gantt-scroll"
-            xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.simuladorso.ui.controllers.devices.DevicesController">
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<ScrollPane
+        xmlns="http://javafx.com/javafx/21"
+        xmlns:fx="http://javafx.com/fxml/1"
+        fx:controller="com.simuladorso.ui.controllers.devices.DevicesController"
+        fitToWidth="true"
+        fitToHeight="false"
+        hbarPolicy="NEVER"
+        vbarPolicy="AS_NEEDED"
+        styleClass="gantt-scroll">
 
     <content>
-        <VBox spacing="14" alignment="TOP_CENTER" styleClass="card" maxWidth="Infinity">
+
+        <VBox spacing="16"
+              alignment="TOP_CENTER"
+              maxWidth="Infinity">
+
             <padding>
-                <Insets top="16" right="20" bottom="16" left="20"/>
+                <Insets top="20"
+                        right="22"
+                        bottom="24"
+                        left="22"/>
             </padding>
 
-            <HBox alignment="CENTER_LEFT" spacing="20" maxWidth="Infinity">
-                <VBox spacing="2">
-                    <Label text="Dispositivos de Entrada / Salida (E/S)" styleClass="card-title" style="-fx-font-size: 20px;"/>
-                    <Label text="El simulador está escuchando los puertos físicos. Conecta o desconecta dispositivos para ver los cambios." styleClass="muted"/>
-                </VBox>
-                <Region HBox.hgrow="ALWAYS"/>
-            </HBox>
+            <!-- ENCABEZADO -->
 
-            <Label fx:id="lblStatus" text="Iniciando monitoreo..." styleClass="muted" style="-fx-font-weight: bold; -fx-text-fill: #16a34a;" maxWidth="Infinity"/>
+            <VBox spacing="7"
+                  alignment="CENTER_LEFT"
+                  maxWidth="Infinity">
 
-            <VBox spacing="10" styleClass="card" VBox.vgrow="ALWAYS" maxWidth="Infinity">
-                <TableView fx:id="tblDevices" VBox.vgrow="ALWAYS" prefHeight="350">
+                <Label
+                        text="Dispositivos de Entrada / Salida (E/S)"
+                        styleClass="page-title"
+                        style="-fx-font-size: 21px;"/>
+
+                <Label
+                        text="El simulador detecta dispositivos USB conectados mediante OSHI. Conecta o desconecta un dispositivo para observar los cambios."
+                        styleClass="muted"
+                        wrapText="true"
+                        maxWidth="Infinity"/>
+
+                <Label
+                        fx:id="lblStatus"
+                        text="Iniciando monitoreo..."
+                        maxWidth="Infinity"
+                        wrapText="true"
+                        style="-fx-font-size: 12px;
+                               -fx-font-weight: bold;
+                               -fx-text-fill: #158a55;"/>
+
+            </VBox>
+
+            <!-- TABLA DE DISPOSITIVOS -->
+
+            <VBox spacing="12"
+                  styleClass="card"
+                  maxWidth="Infinity">
+
+                <HBox alignment="CENTER_LEFT"
+                      spacing="10">
+
+                    <Label
+                            text="Dispositivos detectados"
+                            styleClass="card-title"
+                            style="-fx-font-size: 14px;"/>
+
+                    <Region HBox.hgrow="ALWAYS"/>
+
+                    <Label
+                            text="Actualización automática"
+                            style="-fx-text-fill: #158a55;
+                                   -fx-font-size: 11px;
+                                   -fx-font-weight: bold;"/>
+
+                </HBox>
+
+                <TableView
+                        fx:id="tblDevices"
+                        styleClass="devices-table"
+                        prefHeight="260"
+                        minHeight="200"
+                        maxWidth="Infinity">
+
                     <columnResizePolicy>
                         <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
                     </columnResizePolicy>
+
                     <columns>
-                        <TableColumn fx:id="colNombre" text="Nombre del Dispositivo Físico"/>
-                        <TableColumn fx:id="colConexion" text="Tipo de Interfaz (USB/Bluetooth)"/>
-                        <TableColumn fx:id="colDriver" text="Controlador / Driver"/>
+
+                        <TableColumn
+                                fx:id="colNombre"
+                                text="Nombre del dispositivo"
+                                prefWidth="420"
+                                minWidth="180"/>
+
+                        <TableColumn
+                                fx:id="colConexion"
+                                text="Tipo de conexión"
+                                prefWidth="180"
+                                minWidth="120"/>
+
+                        <TableColumn
+                                fx:id="colDriver"
+                                text="Estado"
+                                prefWidth="180"
+                                minWidth="120"/>
+
                     </columns>
+
+                    <placeholder>
+                        <Label
+                                text="Buscando dispositivos USB conectados..."
+                                styleClass="muted"/>
+                    </placeholder>
+
                 </TableView>
+
             </VBox>
+
+            <!-- INFORMACIÓN DEL DISPOSITIVO -->
+
+            <VBox spacing="14"
+                  styleClass="card"
+                  maxWidth="Infinity">
+
+                <VBox spacing="6">
+
+                    <Label
+                            text="Información del dispositivo seleccionado"
+                            styleClass="card-title"
+                            style="-fx-font-size: 14px;"/>
+
+                    <Label
+                            text="Selecciona un dispositivo de la tabla para consultar sus características."
+                            styleClass="muted"
+                            wrapText="true"/>
+
+                </VBox>
+
+                <Separator styleClass="device-separator"/>
+
+                <GridPane
+                        hgap="30"
+                        vgap="15"
+                        maxWidth="Infinity"
+                        styleClass="device-details">
+
+                    <columnConstraints>
+
+                        <ColumnConstraints
+                                percentWidth="50"
+                                hgrow="ALWAYS"/>
+
+                        <ColumnConstraints
+                                percentWidth="50"
+                                hgrow="ALWAYS"/>
+
+                    </columnConstraints>
+
+                    <!-- COLUMNA IZQUIERDA -->
+
+                    <VBox GridPane.columnIndex="0"
+                          GridPane.rowIndex="0"
+                          spacing="5">
+
+                        <Label
+                                text="Nombre del dispositivo:"
+                                styleClass="device-detail-label"/>
+
+                        <Label
+                                fx:id="lblNombreDetalle"
+                                text="No seleccionado"
+                                wrapText="true"
+                                maxWidth="Infinity"
+                                styleClass="device-detail-value"/>
+
+                    </VBox>
+
+                    <VBox GridPane.columnIndex="0"
+                          GridPane.rowIndex="1"
+                          spacing="5">
+
+                        <Label
+                                text="Identificadores USB (VID/PID):"
+                                styleClass="device-detail-label"/>
+
+                        <Label
+                                fx:id="lblFabricante"
+                                text="-"
+                                wrapText="true"
+                                maxWidth="Infinity"
+                                styleClass="device-detail-value"/>
+
+                    </VBox>
+
+                    <VBox GridPane.columnIndex="0"
+                          GridPane.rowIndex="2"
+                          spacing="5">
+
+                        <Label
+                                text="Identificador del hardware:"
+                                styleClass="device-detail-label"/>
+
+                        <Label
+                                fx:id="lblIdHardware"
+                                text="-"
+                                wrapText="true"
+                                maxWidth="Infinity"
+                                styleClass="device-detail-id"/>
+
+                    </VBox>
+
+                    <!-- COLUMNA DERECHA -->
+
+                    <VBox GridPane.columnIndex="1"
+                          GridPane.rowIndex="0"
+                          spacing="5">
+
+                        <Label
+                                text="Estado:"
+                                styleClass="device-detail-label"/>
+
+                        <Label
+                                fx:id="lblEstado"
+                                text="-"
+                                wrapText="true"
+                                styleClass="device-detail-status"/>
+
+                    </VBox>
+
+                    <VBox GridPane.columnIndex="1"
+                          GridPane.rowIndex="1"
+                          spacing="5">
+
+                        <Label
+                                text="Tipo de conexión:"
+                                styleClass="device-detail-label"/>
+
+                        <Label
+                                fx:id="lblConexionDetalle"
+                                text="-"
+                                wrapText="true"
+                                maxWidth="Infinity"
+                                styleClass="device-detail-value"/>
+
+                    </VBox>
+
+
+                    <!-- CANTIDAD DE INTERFACES ASOCIADAS -->
+
+                    <VBox GridPane.columnIndex="1"
+                          GridPane.rowIndex="2"
+                          spacing="5">
+
+                        <Label
+                                text="Interfaces asociadas:"
+                                styleClass="device-detail-label"/>
+
+                        <Label
+                                fx:id="lblCantidadInterfaces"
+                                text="-"
+                                wrapText="true"
+                                maxWidth="Infinity"
+                                styleClass="device-detail-value"/>
+
+                    </VBox>
+
+
+                </GridPane>
+
+            </VBox>
+
+            <!-- DATOS DEL DRIVER: CONSULTA INDEPENDIENTE A WINDOWS -->
+            <VBox spacing="12" styleClass="card" maxWidth="Infinity">
+                <Label text="Información del controlador (Windows)"
+                       styleClass="card-title" style="-fx-font-size: 14px;"/>
+                <Label text="Datos consultados al seleccionar un dispositivo. Si Windows no identifica un controlador de forma inequívoca, se mostrará No disponible."
+                       styleClass="muted" wrapText="true"/>
+                <Separator styleClass="device-separator"/>
+                <GridPane hgap="30" vgap="15" maxWidth="Infinity"
+                          styleClass="device-details">
+                    <columnConstraints>
+                        <ColumnConstraints percentWidth="50" hgrow="ALWAYS"/>
+                        <ColumnConstraints percentWidth="50" hgrow="ALWAYS"/>
+                    </columnConstraints>
+                    <VBox GridPane.columnIndex="0" GridPane.rowIndex="0" spacing="5">
+                        <Label text="Nombre del controlador:" styleClass="device-detail-label"/>
+                        <Label fx:id="lblDriverNombre" text="-" wrapText="true"
+                               styleClass="device-detail-value"/>
+                    </VBox>
+                    <VBox GridPane.columnIndex="1" GridPane.rowIndex="0" spacing="5">
+                        <Label text="Proveedor del controlador:" styleClass="device-detail-label"/>
+                        <Label fx:id="lblDriverProveedor" text="-" wrapText="true"
+                               styleClass="device-detail-value"/>
+                    </VBox>
+                    <VBox GridPane.columnIndex="0" GridPane.rowIndex="1" spacing="5">
+                        <Label text="Versión del controlador:" styleClass="device-detail-label"/>
+                        <Label fx:id="lblDriverVersion" text="-" wrapText="true"
+                               styleClass="device-detail-value"/>
+                    </VBox>
+                    <VBox GridPane.columnIndex="1" GridPane.rowIndex="1" spacing="5">
+                        <Label text="Fecha del controlador:" styleClass="device-detail-label"/>
+                        <Label fx:id="lblDriverFecha" text="-" wrapText="true"
+                               styleClass="device-detail-value"/>
+                    </VBox>
+                </GridPane>
+            </VBox>
+
+            <!-- HISTORIAL DE EVENTOS -->
+
+            <VBox spacing="12"
+                  styleClass="card"
+                  maxWidth="Infinity">
+
+                <VBox spacing="6">
+
+                    <Label
+                            text="Historial de eventos de E/S"
+                            styleClass="card-title"
+                            style="-fx-font-size: 14px;"/>
+
+                    <Label
+                            text="Registro de conexiones y desconexiones USB detectadas durante la sesión."
+                            styleClass="muted"
+                            wrapText="true"/>
+
+                </VBox>
+
+                <TextArea
+                        fx:id="txtHistorial"
+                        styleClass="device-history"
+                        editable="false"
+                        wrapText="true"
+                        prefHeight="160"
+                        minHeight="120"
+                        maxWidth="Infinity"
+                        promptText="Esperando eventos de dispositivos..."/>
+
+            </VBox>
+
         </VBox>
+
     </content>
+
 </ScrollPane>

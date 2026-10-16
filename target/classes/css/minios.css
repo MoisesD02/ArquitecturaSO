@@ -1,8 +1,8 @@
 /* ==========================================================================
    1. CONFIGURACIÓN GENERAL Y FUENTES
    ========================================================================== */
-.root { 
-    -fx-font-family: "Segoe UI", Arial, sans-serif; 
+.root {
+    -fx-font-family: "Segoe UI", Arial, sans-serif;
 }
 
 .app-root {
@@ -16,55 +16,55 @@
 /* ==========================================================================
    2. BARRA SUPERIOR (HEADER / TOPBAR)
    ========================================================================== */
-.topbar { 
-    -fx-background-color: white; 
-    -fx-border-color: transparent transparent #dbe3ef transparent; 
+.topbar {
+    -fx-background-color: white;
+    -fx-border-color: transparent transparent #dbe3ef transparent;
 }
 
-.app-title { 
-    -fx-font-size: 25px; 
-    -fx-font-weight: 800; 
-    -fx-text-fill: #0b1d3a; 
+.app-title {
+    -fx-font-size: 25px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #0b1d3a;
 }
 
-.app-subtitle, 
-.page-subtitle, 
-.muted { 
-    -fx-text-fill: #71809a; 
+.app-subtitle,
+.page-subtitle,
+.muted {
+    -fx-text-fill: #71809a;
 }
 
-.top-label, 
-.sidebar-caption { 
-    -fx-font-size: 10px; 
-    -fx-font-weight: 700; 
-    -fx-text-fill: #7082a5; 
+.top-label,
+.sidebar-caption {
+    -fx-font-size: 10px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #7082a5;
 }
 
-.clock { 
-    -fx-font-size: 17px; 
-    -fx-font-weight: 800; 
-    -fx-text-fill: #0b1d3a; 
+.clock {
+    -fx-font-size: 17px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #0b1d3a;
 }
 
-.status-on { 
-    -fx-text-fill: #1f9d63; 
-    -fx-font-weight: 700; 
+.status-on {
+    -fx-text-fill: #1f9d63;
+    -fx-font-weight: 700;
 }
 
-.status-off { 
-    -fx-text-fill: #d6475b; 
-    -fx-font-weight: 700; 
+.status-off {
+    -fx-text-fill: #d6475b;
+    -fx-font-weight: 700;
 }
 
 /* ==========================================================================
    3. BARRA LATERAL (SIDEBAR & NAVEGACIÓN)
    ========================================================================== */
-.sidebar { 
-    -fx-background-color: #182741; 
+.sidebar {
+    -fx-background-color: #182741;
 }
 
-.sidebar .separator .line { 
-    -fx-border-color: #34435c; 
+.sidebar .separator .line {
+    -fx-border-color: #34435c;
 }
 
 .nav-button {
@@ -99,36 +99,47 @@
 }
 
 /* Botones de control del Kernel (Iniciar, Detener, etc.) */
-.button-success, 
-.button-danger, 
-.button-primary, 
-.button-secondary { 
-    -fx-text-fill: white; 
-    -fx-font-weight: 700; 
-    -fx-background-radius: 8; 
-    -fx-padding: 10 12; 
+.button-success,
+.button-danger,
+.button-primary,
+.button-secondary {
+    -fx-text-fill: white;
+    -fx-font-weight: 700;
+    -fx-background-radius: 8;
+    -fx-padding: 10 12;
 }
 
-.button-success { 
-    -fx-background-color: #25a46d; 
+.button-success {
+    -fx-background-color: #25a46d;
 }
 
-.button-danger { 
-    -fx-background-color: #ea5564; 
+.button-danger {
+    -fx-background-color: #ea5564;
 }
 
-.button-primary { 
-    -fx-background-color: #3462f5; 
+.button-primary {
+    -fx-background-color: #3462f5;
 }
 
-.button-secondary { 
-    -fx-background-color: #60728f; 
+.button-secondary {
+    -fx-background-color: #60728f;
 }
 
-.button-success:hover { -fx-background-color: #1f8b5c; }
-.button-danger:hover  { -fx-background-color: #d44554; }
-.button-primary:hover { -fx-background-color: #2650d8; }
-.button-secondary:hover { -fx-background-color: #4f5f78; }
+.button-success:hover {
+    -fx-background-color: #1f8b5c;
+}
+
+.button-danger:hover {
+    -fx-background-color: #d44554;
+}
+
+.button-primary:hover {
+    -fx-background-color: #2650d8;
+}
+
+.button-secondary:hover {
+    -fx-background-color: #4f5f78;
+}
 
 /* ==========================================================================
    4. TARJETAS (CARDS) Y COMPONENTES DEL DASHBOARD
@@ -228,12 +239,12 @@
 
     /* Sombra */
     -fx-effect: dropshadow(
-        three-pass-box,
-        rgba(11, 29, 58, 0.15),
-        8,
-        0,
-        0,
-        2
+            three-pass-box,
+            rgba(11, 29, 58, 0.15),
+            8,
+            0,
+            0,
+            2
     );
 
     -fx-cursor: hand;
@@ -248,50 +259,50 @@
     -fx-border-width: 2px;
 
     -fx-effect: dropshadow(
-        three-pass-box,
-        rgba(52, 98, 245, 0.35),
-        10,
-        0,
-        0,
-        4
+            three-pass-box,
+            rgba(52, 98, 245, 0.35),
+            10,
+            0,
+            0,
+            4
     );
 }
 
 /* ==========================================================================
    5. MÓDULOS ESPECÍFICOS (E/S, ARCHIVOS, LOGS Y BARRAS)
    ========================================================================== */
-.device-on { 
-    -fx-text-fill: #158a55; 
-    -fx-font-weight: 700; 
+.device-on {
+    -fx-text-fill: #158a55;
+    -fx-font-weight: 700;
 }
 
-.device-off { 
-    -fx-text-fill: #df4757; 
-    -fx-font-weight: 700; 
+.device-off {
+    -fx-text-fill: #df4757;
+    -fx-font-weight: 700;
 }
 
-.file-line, 
-.file-tree-static { 
-    -fx-font-family: Consolas, monospace; 
-    -fx-text-fill: #3b4e6b; 
+.file-line,
+.file-tree-static {
+    -fx-font-family: Consolas, monospace;
+    -fx-text-fill: #3b4e6b;
 }
 
-.log-area { 
-    -fx-control-inner-background: #20304a; 
-    -fx-text-fill: #e2e8f0; 
-    -fx-font-family: Consolas, monospace; 
-    -fx-font-size: 11px; 
-    -fx-background-radius: 8; 
+.log-area {
+    -fx-control-inner-background: #20304a;
+    -fx-text-fill: #e2e8f0;
+    -fx-font-family: Consolas, monospace;
+    -fx-font-size: 11px;
+    -fx-background-radius: 8;
 }
 
-.full-log { 
-    -fx-font-size: 13px; 
+.full-log {
+    -fx-font-size: 13px;
 }
 
-.small-button { 
-    -fx-background-color: transparent; 
-    -fx-text-fill: #3462f5; 
-    -fx-padding: 2 4; 
+.small-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #3462f5;
+    -fx-padding: 2 4;
     -fx-cursor: hand;
 }
 
@@ -299,14 +310,14 @@
     -fx-underline: true;
 }
 
-.progress-bar > .track { 
-    -fx-background-color: #e7edf6; 
-    -fx-background-radius: 8; 
+.progress-bar > .track {
+    -fx-background-color: #e7edf6;
+    -fx-background-radius: 8;
 }
 
-.progress-bar > .bar { 
-    -fx-background-color: #3462f5; 
-    -fx-background-radius: 8; 
+.progress-bar > .bar {
+    -fx-background-color: #3462f5;
+    -fx-background-radius: 8;
 }
 
 /* ==========================================================================
@@ -370,11 +381,7 @@
 
     -fx-background-color: transparent;
 
-    -fx-border-color:
-            transparent
-            transparent
-            #dbe3ef
-            transparent;
+    -fx-border-color: transparent transparent #dbe3ef transparent;
 }
 
 
@@ -438,4 +445,92 @@
 
 .gantt-scroll > .corner {
     -fx-background-color: transparent;
+}
+
+
+/* ==========================================================
+   DISPOSITIVOS E/S - MEJORAS VISUALES
+   ========================================================== */
+
+/* Contenedor de información del dispositivo */
+.device-details {
+    -fx-background-color: #f8faff;
+    -fx-background-radius: 8px;
+    -fx-border-color: #dbe3ef;
+    -fx-border-width: 1px;
+    -fx-border-radius: 8px;
+    -fx-padding: 18px 20px;
+}
+
+/* Etiquetas descriptivas */
+.device-detail-label {
+    -fx-text-fill: #71809a;
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+}
+
+/* Valores obtenidos del dispositivo */
+.device-detail-value {
+    -fx-text-fill: #12264a;
+    -fx-font-size: 13px;
+    -fx-font-weight: 700;
+}
+
+/* Identificador de hardware */
+.device-detail-id {
+    -fx-text-fill: #43536e;
+    -fx-font-size: 12px;
+    -fx-font-family: Consolas, monospace;
+}
+
+/* Estado del dispositivo */
+.device-detail-status {
+    -fx-text-fill: #158a55;
+    -fx-font-size: 13px;
+    -fx-font-weight: 700;
+}
+
+/* Tabla de dispositivos */
+.devices-table {
+    -fx-background-color: white;
+    -fx-border-color: #dbe3ef;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-fixed-cell-size: 34px;
+}
+
+.devices-table .table-row-cell {
+    -fx-background-color: white;
+    -fx-border-color: transparent transparent #edf1f7 transparent;
+}
+
+.devices-table .table-row-cell:odd {
+    -fx-background-color: #f8faff;
+}
+
+.devices-table .table-row-cell:hover {
+    -fx-background-color: #eaf0ff;
+}
+
+.devices-table .table-row-cell:selected {
+    -fx-background-color: #3462f5;
+}
+
+.devices-table .table-row-cell:selected .text {
+    -fx-fill: white;
+}
+
+/* Historial de conexiones */
+.device-history {
+    -fx-font-family: Consolas, monospace;
+    -fx-font-size: 12px;
+    -fx-text-fill: #263a5c;
+    -fx-control-inner-background: #f8faff;
+    -fx-border-color: #dbe3ef;
+    -fx-border-radius: 8px;
+}
+
+/* Separadores */
+.device-separator .line {
+    -fx-border-color: #dbe3ef;
 }
