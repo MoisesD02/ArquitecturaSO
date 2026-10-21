@@ -11,13 +11,14 @@ public class INodo {
     private final int tamanoBloques;
     private final List<Integer> bloquesAsignados;
 
-    // Metadatos extendidos
     private final String fechaCreacion;
+    private final String rutaVirtual;
     private final String rutaFisica;
     private final String permisos;
     private final String propietario;
+    private final String tamanoBytes;
 
-    public INodo(int id, String nombreArchivo, int tamanoBloques, List<Integer> bloquesAsignados, String rutaFisica) {
+    public INodo(int id, String nombreArchivo, int tamanoBloques, int tamanoBloqueKB, List<Integer> bloquesAsignados, String rutaFisica) {
         this.id = id;
         this.nombreArchivo = nombreArchivo;
         this.tamanoBloques = tamanoBloques;
@@ -25,8 +26,14 @@ public class INodo {
 
         this.fechaCreacion = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
         this.rutaFisica = rutaFisica;
-        this.permisos = "-rw-r--r--"; // Lectura/Escritura base
-        this.propietario = "simuladorSO_User";
+        this.rutaVirtual = "/home/simuladorSO/" + nombreArchivo;
+
+        // Cálculo matemático del peso: Bloques * KB por bloque
+        int kilobytes = tamanoBloques * tamanoBloqueKB;
+        this.tamanoBytes = kilobytes + " KB (" + (kilobytes * 1024) + " bytes)";
+
+        this.permisos = "Lectura y Escritura (Modificable)";
+        this.propietario = "Usuario_Local";
     }
 
     public int getId() { return id; }
@@ -34,7 +41,9 @@ public class INodo {
     public int getTamanoBloques() { return tamanoBloques; }
     public List<Integer> getBloquesAsignados() { return bloquesAsignados; }
     public String getFechaCreacion() { return fechaCreacion; }
+    public String getRutaVirtual() { return rutaVirtual; }
     public String getRutaFisica() { return rutaFisica; }
     public String getPermisos() { return permisos; }
     public String getPropietario() { return propietario; }
+    public String getTamanoBytes() { return tamanoBytes; }
 }

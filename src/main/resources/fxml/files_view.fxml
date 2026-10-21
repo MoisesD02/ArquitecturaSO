@@ -5,6 +5,7 @@
 <?import javafx.scene.layout.*?>
 
 <ScrollPane fitToWidth="true" fitToHeight="true" styleClass="dashboard-scroll"
+            style="-fx-background: transparent; -fx-background-color: transparent;"
             xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.simuladorso.ui.controllers.files.FilesController">
 
@@ -15,67 +16,82 @@
             <HBox alignment="CENTER_LEFT" spacing="12">
                 <VBox spacing="2" HBox.hgrow="ALWAYS">
                     <Label text="Sistema de Archivos — Asignación por I-Nodos" styleClass="card-title" style="-fx-font-size: 20px;"/>
-                    <Label text="Archivos físicos (.txt) vinculados a bloques virtuales indexados." styleClass="muted"/>
+                    <Label text="Generación de archivos físicos con peso real simulado mediante padding." styleClass="muted"/>
                 </VBox>
                 <Label fx:id="lblEspacioLibre" text="Bloques Libres: 20 / 20" styleClass="status-on" style="-fx-font-size: 14px; -fx-padding: 6 12;"/>
             </HBox>
 
-            <HBox spacing="10" alignment="CENTER_LEFT" styleClass="card" style="-fx-background-color: rgba(255,255,255,0.03);">
-                <TextField fx:id="txtNombre" promptText="Nombre del archivo" prefWidth="200"/>
-                <Spinner fx:id="spnBloques" initialValue="1" min="1" max="20" prefWidth="90"/>
+            <!-- BARRA DE HERRAMIENTAS CON CONFIGURACIÓN DE BLOQUE -->
+            <HBox spacing="10" alignment="CENTER_LEFT" styleClass="card" style="-fx-background-color: rgba(0,0,0,0.03);">
+                <Label text="Tamaño x Bloque (KB):" styleClass="muted" style="-fx-font-weight: bold; -fx-text-fill: #3b82f6;"/>
+                <!-- Límite de 1 a 10 KB implementado en este Spinner -->
+                <Spinner fx:id="spnTamanoBloque" initialValue="4" min="1" max="10" prefWidth="65"/>
+
+                <Separator orientation="VERTICAL" style="-fx-padding: 0 10;"/>
+
+                <TextField fx:id="txtNombre" promptText="Nombre del archivo" prefWidth="180"/>
+                <Label text="Bloques a usar:" styleClass="muted"/>
+                <Spinner fx:id="spnBloques" initialValue="1" min="1" max="20" prefWidth="75"/>
                 <Button text="+ Crear Archivo" onAction="#handleCrearArchivo" styleClass="button-success"/>
-                <Button text="🗑 Eliminar Seleccionado" onAction="#handleEliminarArchivo" styleClass="button-danger"/>
+                <Button text="🗑 Eliminar Selección" onAction="#handleEliminarArchivo" styleClass="button-danger"/>
             </HBox>
 
             <VBox spacing="8" styleClass="card">
-                <Label text="ESTADO FÍSICO DEL DISCO (20 BLOQUES)" styleClass="card-title"/>
+                <Label text="MAPA FÍSICO DEL DISCO (20 BLOQUES)" styleClass="card-title"/>
                 <FlowPane fx:id="gridDisco" hgap="8" vgap="8" alignment="CENTER_LEFT"/>
             </VBox>
 
-            <!-- CONTENEDOR DIVIDIDO: TABLA (IZQUIERDA) Y METADATOS (DERECHA) -->
             <HBox spacing="16" VBox.vgrow="ALWAYS">
-
-                <!-- Mitad Izquierda: Tabla -->
                 <VBox spacing="8" HBox.hgrow="ALWAYS" styleClass="card">
-                    <Label text="REGISTRO DE CONTROL (I-NODOS)" styleClass="card-title"/>
+                    <Label text="TABLA DE I-NODOS" styleClass="card-title"/>
                     <TableView fx:id="tblINodos" VBox.vgrow="ALWAYS" prefHeight="220">
                         <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/></columnResizePolicy>
                         <columns>
-                            <TableColumn fx:id="colId" text="I-Nodo"/>
-                            <TableColumn fx:id="colNombre" text="Archivo"/>
-                            <TableColumn fx:id="colTamano" text="Peso (Bloques)"/>
+                            <TableColumn fx:id="colId" text="ID I-Nodo" prefWidth="70"/>
+                            <TableColumn fx:id="colNombre" text="Nombre Archivo"/>
+                            <TableColumn fx:id="colTamano" text="Bloques"/>
                         </columns>
                     </TableView>
                 </VBox>
 
-                <!-- Mitad Derecha: Metadatos -->
-                <VBox spacing="10" prefWidth="350" styleClass="card" style="-fx-background-color: rgba(0,0,0,0.1);">
-                    <Label text="METADATOS DEL ARCHIVO" styleClass="card-title"/>
+                <VBox spacing="10" prefWidth="380" styleClass="card" style="-fx-background-color: rgba(0,0,0,0.05);">
+                    <Label text="INSPECTOR DE METADATOS" styleClass="card-title"/>
                     <GridPane hgap="10" vgap="12">
-                        <Label text="ID I-Nodo:" GridPane.rowIndex="0" GridPane.columnIndex="0" styleClass="muted"/>
+                        <columnConstraints>
+                            <ColumnConstraints minWidth="90" prefWidth="100"/>
+                            <ColumnConstraints hgrow="ALWAYS"/>
+                        </columnConstraints>
+
+                        <Label text="ID I-Nodo:" GridPane.rowIndex="0" GridPane.columnIndex="0" styleClass="muted" style="-fx-font-weight: bold;"/>
                         <Label fx:id="lblMetaId" text="-" GridPane.rowIndex="0" GridPane.columnIndex="1" styleClass="value"/>
 
-                        <Label text="Nombre:" GridPane.rowIndex="1" GridPane.columnIndex="0" styleClass="muted"/>
+                        <Label text="Nombre:" GridPane.rowIndex="1" GridPane.columnIndex="0" styleClass="muted" style="-fx-font-weight: bold;"/>
                         <Label fx:id="lblMetaNombre" text="-" GridPane.rowIndex="1" GridPane.columnIndex="1" styleClass="value"/>
 
-                        <Label text="Creación:" GridPane.rowIndex="2" GridPane.columnIndex="0" styleClass="muted"/>
+                        <Label text="Creación:" GridPane.rowIndex="2" GridPane.columnIndex="0" styleClass="muted" style="-fx-font-weight: bold;"/>
                         <Label fx:id="lblMetaFecha" text="-" GridPane.rowIndex="2" GridPane.columnIndex="1" styleClass="value"/>
 
-                        <Label text="Bloques Ref:" GridPane.rowIndex="3" GridPane.columnIndex="0" styleClass="muted"/>
-                        <Label fx:id="lblMetaBloques" text="-" GridPane.rowIndex="3" GridPane.columnIndex="1" styleClass="value" wrapText="true"/>
+                        <Label text="Peso Real:" GridPane.rowIndex="3" GridPane.columnIndex="0" styleClass="muted" style="-fx-font-weight: bold;"/>
+                        <Label fx:id="lblMetaTamanoBytes" text="-" GridPane.rowIndex="3" GridPane.columnIndex="1" styleClass="value"/>
 
-                        <Label text="Propietario:" GridPane.rowIndex="4" GridPane.columnIndex="0" styleClass="muted"/>
-                        <Label fx:id="lblMetaProp" text="-" GridPane.rowIndex="4" GridPane.columnIndex="1" styleClass="value"/>
+                        <Label text="Bloques Ref:" GridPane.rowIndex="4" GridPane.columnIndex="0" styleClass="muted" style="-fx-font-weight: bold;"/>
+                        <Label fx:id="lblMetaBloques" text="-" GridPane.rowIndex="4" GridPane.columnIndex="1" styleClass="value" wrapText="true"/>
 
-                        <Label text="Permisos:" GridPane.rowIndex="5" GridPane.columnIndex="0" styleClass="muted"/>
-                        <Label fx:id="lblMetaPerm" text="-" GridPane.rowIndex="5" GridPane.columnIndex="1" styleClass="value"/>
+                        <Label text="Permisos:" GridPane.rowIndex="5" GridPane.columnIndex="0" styleClass="muted" style="-fx-font-weight: bold;"/>
+                        <Label fx:id="lblMetaPerm" text="-" GridPane.rowIndex="5" GridPane.columnIndex="1" styleClass="value" style="-fx-font-size: 11px;"/>
                     </GridPane>
 
-                    <Label text="Ruta Física en Disco:" styleClass="muted" style="-fx-padding: 10 0 0 0;"/>
-                    <TextArea fx:id="txtMetaRuta" editable="false" prefRowCount="2" wrapText="true" style="-fx-font-size: 11px;"/>
+                    <VBox spacing="4" style="-fx-padding: 10 0 0 0;">
+                        <Label text="Ruta Absoluta Virtual (MiniOS):" styleClass="muted" style="-fx-font-size: 11px;"/>
+                        <TextField fx:id="txtMetaRutaVirtual" editable="false" style="-fx-font-size: 11px; -fx-font-family: monospace;"/>
+                    </VBox>
+
+                    <VBox spacing="4">
+                        <Label text="Ruta Absoluta Física (Windows/Host):" styleClass="muted" style="-fx-font-size: 11px;"/>
+                        <TextArea fx:id="txtMetaRuta" editable="false" prefRowCount="2" wrapText="true" style="-fx-font-size: 11px; -fx-font-family: monospace;"/>
+                    </VBox>
                 </VBox>
             </HBox>
-
         </VBox>
     </content>
 </ScrollPane>
