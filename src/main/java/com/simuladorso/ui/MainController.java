@@ -12,15 +12,11 @@ import javafx.animation.Timeline;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ProgressBar;
-import javafx.scene.control.TextArea;
+import javafx.scene.control.*;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
-import javafx.scene.control.ScrollPane;
 
 import java.io.IOException;
 import java.time.LocalTime;
@@ -84,6 +80,9 @@ public class MainController {
     private final DateTimeFormatter realTimeFormatter =
             DateTimeFormatter.ofPattern("HH:mm:ss");
 
+    @FXML private ComboBox<String> cmbAlgoritmoArchivos;
+    private ScrollPane cachedFilesPane;
+
     @FXML
     public void initialize() {
 
@@ -106,6 +105,15 @@ public class MainController {
         mostrarPagina(dashboardPage, navDashboard);
         actualizarInterfaz();
         actualizarHoraReal();
+
+        if (cmbAlgoritmoArchivos != null) {
+            cmbAlgoritmoArchivos.getItems().addAll(
+                    "Asignación I-Nodos",
+                    "Asignación Contigua",
+                    "Listas Ligadas"
+            );
+            cmbAlgoritmoArchivos.getSelectionModel().selectFirst(); // I-Nodos por defecto
+        }
 
         registrarEvento("Simulador cargado. Núcleo base preparado.");
     }
@@ -350,10 +358,34 @@ public class MainController {
 
 
     @FXML private void showFiles() {
-        if (validarKernelActivo("explorar el sistema de archivos")) {
-            mostrarPagina(filesPage, navFiles);
+        if (!validarKernelActivo("explorar el sistema de archivos")) {
+            return;
+        }
+
+        try {
+            if (cachedFilesPane == null) {
+                FXMLLoader loader = new FXMLLoader(
+                        getClass().getResource("/fxml/files_view.fxml")
+                );
+                cachedFilesPane = loader.load();
+                cachedFilesPane.setFitToWidth(true);
+                cachedFilesPane.setFitToHeight(true);
+                cachedFilesPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+                cachedFilesPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+                cachedFilesPane.setStyle("-fx-background-color: transparent; -fx-background: transparent;");
+            }
+
+            ocultarPaginasEstaticas();
+            centerStackPane.getChildren().add(cachedFilesPane);
+            marcarBotonActivo(navFiles);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            registrarEvento("ERROR: No se pudo cargar la vista files_view.fxml.");
         }
     }
+
+
     @FXML private void showLogs() { mostrarPagina(logsPage, navLogs); }
 
     /**

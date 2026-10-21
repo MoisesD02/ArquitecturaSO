@@ -31,6 +31,9 @@
                 <Button fx:id="navProcesses" text="⚙  Procesos" onAction="#showProcesses" maxWidth="Infinity" styleClass="nav-button"/>
                 <Button fx:id="navMemory" text="≡  Memoria" onAction="#showMemory" maxWidth="Infinity" styleClass="nav-button"/>
                 <Button fx:id="navDevices" text="⌁  Dispositivos E/S" onAction="#showDevices" maxWidth="Infinity" styleClass="nav-button"/>
+
+
+
                 <Button fx:id="navFiles" text="▱  Sistema de archivos" onAction="#showFiles" maxWidth="Infinity" styleClass="nav-button"/>
                 <Button fx:id="navLogs" text="☷  Log del sistema" onAction="#showLogs" maxWidth="Infinity" styleClass="nav-button"/>
             </VBox>
@@ -131,11 +134,11 @@
                             <!-- (3,2): SISTEMA DE ARCHIVOS -->
                             <VBox GridPane.columnIndex="1" GridPane.rowIndex="2" onMouseClicked="#showFiles" spacing="9" styleClass="dashboard-card">
                                 <Label text="SISTEMA DE ARCHIVOS" styleClass="card-title"/>
-                                <VBox spacing="2">
-                                    <Label text="▱  /" styleClass="file-line"/>
-                                    <Label text="    ├─ home" styleClass="file-line"/>
-                                    <Label text="    ├─ system" styleClass="file-line"/>
-                                    <Label text="    └─ temp" styleClass="file-line"/>
+                                <VBox spacing="4">
+                                    <Label text="ALGORITMO DE ARCHIVOS" styleClass="sidebar-caption" style="-fx-font-size: 10px;"/>
+                                    <ComboBox fx:id="cmbAlgoritmoArchivos" maxWidth="Infinity" styleClass="combo-box">
+                                        <!-- Opciones del slide/combo -->
+                                    </ComboBox>
                                 </VBox>
                                 <Region VBox.vgrow="ALWAYS"/>
                                 <Label text="Estructura base montada." styleClass="note"/>

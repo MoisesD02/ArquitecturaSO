@@ -38,7 +38,7 @@
                         style="-fx-font-size: 21px;"/>
 
                 <Label
-                        text="El simulador detecta dispositivos USB conectados mediante OSHI. Conecta o desconecta un dispositivo para observar los cambios."
+                        text="El simulador detecta dispositivos USB conectados. Conecta o desconecta un dispositivo para observar los cambios."
                         styleClass="muted"
                         wrapText="true"
                         maxWidth="Infinity"/>
