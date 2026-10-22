@@ -8,6 +8,9 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.StackPane;
+import java.awt.Desktop;
+import java.io.File;
+import java.io.IOException;
 
 public class FilesController {
 
@@ -41,6 +44,27 @@ public class FilesController {
 
         tblINodos.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
             mostrarMetadatos(newSelection);
+        });
+
+        tblINodos.setOnMouseClicked(event -> {
+            if (event.getClickCount() == 2) {
+                INodo archivo = tblINodos.getSelectionModel().getSelectedItem();
+
+                if (archivo != null) {
+                    try {
+                        File ruta = new File(archivo.getRutaFisica());
+
+                        if (ruta.exists()) {
+                            Desktop.getDesktop().open(ruta);
+                        } else {
+                            mostrarAlerta("Error", "El archivo físico no existe.");
+                        }
+
+                    } catch (IOException | UnsupportedOperationException e) {
+                        mostrarAlerta("Error", "No se pudo abrir el archivo.");
+                    }
+                }
+            }
         });
 
         actualizarVista();
@@ -120,17 +144,31 @@ public class FilesController {
         gridDisco.getChildren().clear();
         boolean[] disco = fileSystem.getEstadoDisco();
 
+        String[] colores = {
+                "#60a5fa", "#fb923c", "#c084fc",
+                "#22d3ee", "#f472b6", "#facc15",
+                "#2dd4bf", "#818cf8", "#fb7185"
+        };
+
         for (int i = 0; i < disco.length; i++) {
             StackPane bloqueNode = new StackPane();
             bloqueNode.setPrefSize(48, 48);
 
             boolean ocupado = disco[i];
 
-            // Colores suaves (Tailwind Red 400 y Green 400)
-            String estilo = ocupado
-                    ? "-fx-background-color: #f87171; -fx-background-radius: 6px; -fx-border-color: #ef4444; -fx-border-radius: 6px;"
-                    : "-fx-background-color: #4ade80; -fx-background-radius: 6px; -fx-border-color: #22c55e; -fx-border-radius: 6px;";
+            String color = "#4ade80"; // Libre
 
+            for (INodo archivo : fileSystem.getTodosLosArchivos()) {
+                if (archivo.getBloquesAsignados().contains(i)) {
+                    color = colores[Math.floorMod(archivo.getId() - 1, colores.length)];
+                    break;
+                }
+            }
+
+            String estilo = "-fx-background-color: " + color
+                    + "; -fx-background-radius: 6px;"
+                    + "-fx-border-color: " + color
+                    + "; -fx-border-radius: 6px;";
             bloqueNode.setStyle(estilo);
 
             Label lblIndex = new Label("B-" + i);
